@@ -12,7 +12,8 @@ const Hub: React.FC = () => {
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-300 mb-2">
                             Welcome to
                         </h1>
-                        <QuantraLogo className="w-56 sm:w-72 h-auto mb-10 sm:mb-16" />
+                        <QuantraLogo className="w-64 sm:w-80 h-auto mb-10 sm:mb-16" />
+
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">
                             <NavLink title="Planner" href="#" icon={<CalendarIcon className="w-6 h-6" />} />
