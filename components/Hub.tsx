@@ -14,9 +14,13 @@ const Hub: React.FC = () => {
                         </h1>
                         <QuantraLogo className="w-64 sm:w-80 h-auto mb-10 sm:mb-16" />
 
-
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">
-                            <NavLink title="Planner" href="planner.quantra.co.za" icon={<CalendarIcon className="w-6 h-6" />} />
+                            {/* FIX: make this an absolute URL */}
+                            <NavLink
+                                title="Planner"
+                                href="https://planner.quantra.co.za"
+                                icon={<CalendarIcon className="w-6 h-6" />}
+                            />
 
                             <NavLink title="Timesheets" href="#" icon={<ClockIcon className="w-6 h-6" />} />
                             <NavLink title="Admin" href="#" icon={<ShieldCheckIcon className="w-6 h-6" />} />
