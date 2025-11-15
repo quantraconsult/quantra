@@ -16,7 +16,8 @@ const Hub: React.FC = () => {
 
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">
-                            <NavLink title="Planner" href="https://quantra-planner.vercel.app" icon={<CalendarIcon className="w-6 h-6" />}/>
+                            <NavLink title="Planner" href="https://planner.quantra.co.za?cameFromHub=1" icon={<CalendarIcon className="w-6 h-6" />} />
+
                             <NavLink title="Timesheets" href="#" icon={<ClockIcon className="w-6 h-6" />} />
                             <NavLink title="Admin" href="#" icon={<ShieldCheckIcon className="w-6 h-6" />} />
                             <NavLink title="Logout" href="#" icon={<LogoutIcon className="w-6 h-6" />} />
