@@ -1,0 +1,5 @@
+{
+  "name": "Quantra Hub",
+  "description": "A central dashboard for Quantra applications, providing quick navigation to the Project Planner, Timesheets, Admin Panel, and user settings.",
+  "requestFramePermissions": []
+}
