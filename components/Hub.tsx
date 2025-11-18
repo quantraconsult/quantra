@@ -22,7 +22,7 @@ const Hub: React.FC = () => {
                                 icon={<CalendarIcon className="w-6 h-6" />}
                             />
 
-                            <NavLink title="Timesheets" href="https://timesheets.quantra.co.za" icon={<ClockIcon className="w-6 h-6" />} />
+                            <NavLink title="Timesheets" href="https://timesheet-ruby.vercel.app/" icon={<ClockIcon className="w-6 h-6" />} />
                             <NavLink title="Admin" href="#" icon={<ShieldCheckIcon className="w-6 h-6" />} />
                             <NavLink title="Logout" href="#" icon={<LogoutIcon className="w-6 h-6" />} />
                         </div>
