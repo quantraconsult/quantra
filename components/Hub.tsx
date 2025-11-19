@@ -1,7 +1,7 @@
 import React from 'react';
 import NavLink from './NavLink';
 import { CalendarIcon, ClockIcon, ShieldCheckIcon, LogoutIcon } from './Icons';
-import { QuantraLogo } from './Logo';
+import { FlowgentLogo } from './Logo';
 
 const Hub: React.FC = () => {
     return (
@@ -12,10 +12,9 @@ const Hub: React.FC = () => {
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-300 mb-2">
                             Welcome to
                         </h1>
-                        <QuantraLogo className="w-64 sm:w-80 h-auto mb-10 sm:mb-16" />
+                        <FlowgentLogo className="w-64 sm:w-80 h-auto mb-10 sm:mb-16" />
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">
-                            {/* FIX: make this an absolute URL */}
                             <NavLink
                                 title="Planner"
                                 href="https://planner.quantra.co.za"
@@ -30,7 +29,7 @@ const Hub: React.FC = () => {
                 </div>
             </main>
             <footer className="w-full text-center py-6 text-gray-500 text-sm">
-                Quantra Consulting, 2025
+                Flowgent, 2025
             </footer>
         </div>
     );
