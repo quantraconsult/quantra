@@ -8,29 +8,29 @@ interface HeaderProps {
   onLogout?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, companyName = "Quantra", onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ user, onLogout }) => {
   return (
     <header className="bg-[#121212] border-b border-zinc-800 sticky top-0 z-50">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* CHANGED: max-w-7xl -> max-w-[1920px] to stop the logo jump */}
+      <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           
-          {/* LEFT: Branding + Tenant Context */}
+          {/* LEFT: Branding + Context */}
           <div className="flex items-center gap-6">
             <a href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
               <FlowgentLogo />
             </a>
             
-            {/* The "Pipe" separator */}
             <div className="h-8 w-px bg-zinc-700 hidden sm:block"></div>
             
-            {/* Tenant Name */}
+            {/* CHANGED: Text to Subdomain / Hub */}
             <div className="hidden sm:flex flex-col justify-center">
-              <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Workspace</span>
-              <span className="text-sm font-bold text-zinc-200">{companyName}</span>
+              <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Subdomain</span>
+              <span className="text-sm font-bold text-zinc-200">Hub</span>
             </div>
           </div>
 
-          {/* RIGHT: User Profile & Actions */}
+          {/* RIGHT: User Profile */}
           {user && (
             <div className="flex items-center space-x-6">
               <div className="flex flex-col items-end hidden sm:flex">
