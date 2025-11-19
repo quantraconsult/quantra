@@ -1,7 +1,6 @@
 import React from 'react';
 import Tooltip from '../Tooltip';
 
-// Need to redefine basic types locally since we are in Hub context
 interface User { id: string; name: string; email: string; status: 'pending' | 'approved'; is_admin: boolean; }
 
 interface ManageUsersModalProps {
@@ -10,24 +9,24 @@ interface ManageUsersModalProps {
   onApproveUser: (userId: string) => void;
   onEditUser: (user: User) => void;
   onDeleteUser: (userId: string) => void;
-  tasks: any[]; // Kept for compatibility but unused
+  tasks: any[];
   currentUser: User;
 }
 
+// FIXED ICONS: Removed width/height, added overflow-visible, strictly controlled by className
 const XIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="overflow-visible" {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 );
 const EditIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="overflow-visible" {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
 );
 const TrashIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="overflow-visible" {...props}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
 );
 
 const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onApproveUser, onEditUser, onDeleteUser, currentUser }) => {
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-      {/* CHANGED: max-w-6xl (Wider) */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh]">
         
         <div className="flex justify-between items-center p-6 border-b border-zinc-800">
@@ -84,7 +83,7 @@ const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onA
                                     onClick={() => onEditUser(user)}
                                     className="text-zinc-400 hover:text-cyan-400 p-2 rounded-lg hover:bg-zinc-800 transition-colors"
                                 >
-                                    <EditIcon className="w-5 h-5" />
+                                    <EditIcon className="w-4 h-4" />
                                 </button>
                               </Tooltip>
                               
@@ -94,7 +93,7 @@ const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onA
                                         onClick={() => onDeleteUser(user.id)}
                                         className="text-zinc-400 hover:text-red-400 p-2 rounded-lg hover:bg-red-900/10 transition-colors"
                                     >
-                                        <TrashIcon className="w-5 h-5"/>
+                                        <TrashIcon className="w-4 h-4"/>
                                     </button>
                                 </Tooltip>
                               )}

@@ -5,21 +5,21 @@ interface Project { id: string; name: string; sorting: number; }
 interface ManageProjectsModalProps {
   items: Project[];
   onClose: () => void;
-  tasks: any[]; completedTasks: any[]; // Unused in Hub context
+  tasks: any[]; completedTasks: any[];
   onAddItem: (name: string) => void;
   onRemoveItem: (id: string) => void;
   onReorderItem: (id: string, direction: 'up' | 'down') => void;
   onUpdateItemName: (id: string, name: string) => void;
 }
 
-// Fixed Icons with proper viewBox
-const XIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
-const TrashIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>;
-const ArrowUpIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>;
-const ArrowDownIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>;
-const EditIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
-const CheckIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}><path d="M20 6 9 17l-5-5"/></svg>;
-const XCircleIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>;
+// FIXED ICONS: No hardcoded dimensions, overflow-visible
+const XIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="overflow-visible" {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+const TrashIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="overflow-visible" {...props}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>;
+const ArrowUpIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="overflow-visible" {...props}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>;
+const ArrowDownIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="overflow-visible" {...props}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>;
+const EditIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="overflow-visible" {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
+const CheckIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="overflow-visible" {...props}><path d="M20 6 9 17l-5-5"/></svg>;
+const XCircleIcon = (props: any) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="overflow-visible" {...props}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>;
 
 const ManageProjectsModal: React.FC<ManageProjectsModalProps> = ({ items, onClose, onAddItem, onRemoveItem, onReorderItem, onUpdateItemName }) => {
   const [newItemName, setNewItemName] = useState('');
@@ -44,7 +44,6 @@ const ManageProjectsModal: React.FC<ManageProjectsModalProps> = ({ items, onClos
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-      {/* CHANGED: max-w-4xl (Wider) */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[85vh]">
         
         <div className="flex justify-between items-center p-6 border-b border-zinc-800">
