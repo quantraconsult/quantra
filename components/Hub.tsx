@@ -1,11 +1,12 @@
 import React from 'react';
 import { CalendarIcon, ClockIcon, ShieldCheckIcon, LogoutIcon } from './Icons';
+import { FlowgentLogo } from './Logo'; // Ensure we import the Logo if needed for branding
 
 interface HubProps {
   companyName: string;
+  isAdmin: boolean; // New prop
 }
 
-// A reusable "App Card" component for the new look
 const AppCard: React.FC<{ 
   title: string; 
   desc: string; 
@@ -35,11 +36,10 @@ const AppCard: React.FC<{
   </a>
 );
 
-const Hub: React.FC<HubProps> = ({ companyName }) => {
+const Hub: React.FC<HubProps> = ({ companyName, isAdmin }) => {
   return (
     <div className="flex flex-col items-center justify-center px-4 sm:px-8 py-12 md:py-20" style={{minHeight: 'calc(100vh - 80px)'}}>
       
-      {/* 1. Hero Section: Text Only, No Huge Logo */}
       <div className="text-center mb-12 max-w-2xl">
         <span className="text-xs font-bold text-cyan-500 uppercase tracking-widest mb-2 block">Workspace Dashboard</span>
         <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
@@ -50,10 +50,8 @@ const Hub: React.FC<HubProps> = ({ companyName }) => {
         </p>
       </div>
 
-      {/* 2. The Grid: App Cards instead of Buttons */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
         
-        {/* Planner Module */}
         <AppCard 
           title="Project Planner"
           desc="Manage tasks, assign team members, and track project deadlines efficiently."
@@ -62,7 +60,6 @@ const Hub: React.FC<HubProps> = ({ companyName }) => {
           primary={true}
         />
 
-        {/* Timesheet Module */}
         <AppCard 
           title="Timesheets"
           desc="Log your daily hours, site visits, and travel claims for approval."
@@ -71,15 +68,16 @@ const Hub: React.FC<HubProps> = ({ companyName }) => {
           primary={true}
         />
 
-        {/* Admin (Secondary Style) */}
-        <AppCard 
-          title="Admin Console"
-          desc="Manage users, permissions, and global workspace settings."
-          href="#" 
-          icon={<ShieldCheckIcon className="w-8 h-8" />}
-        />
+        {/* Only show Admin Console if user is an admin */}
+        {isAdmin && (
+          <AppCard 
+            title="Admin Console"
+            desc="Manage users, permissions, and global workspace settings."
+            href="#" 
+            icon={<ShieldCheckIcon className="w-8 h-8" />}
+          />
+        )}
 
-        {/* Logout (Secondary Style) */}
         <AppCard 
           title="Sign Out"
           desc="Securely log out of your Flowgent account."
@@ -88,7 +86,6 @@ const Hub: React.FC<HubProps> = ({ companyName }) => {
         />
       </div>
 
-      {/* Footer text moved inside the flex container */}
       <footer className="mt-16 text-center text-zinc-600 text-sm">
         Flowgent v1.0 &bull; Secure Workspace Environment
       </footer>
