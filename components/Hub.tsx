@@ -1,47 +1,52 @@
 import React from 'react';
 import { CalendarIcon, ClockIcon, ShieldCheckIcon, LogoutIcon } from './Icons';
-import { FlowgentLogo } from './Logo';
 
 interface HubProps {
   companyName: string;
   isAdmin: boolean;
   onAdminClick: () => void;
+  onLogout: () => void; // NEW: Added logout prop
 }
 
 const AppCard: React.FC<{ 
   title: string; 
   desc: string; 
-  href: string; 
+  href?: string; 
+  onClick?: () => void; // NEW: Support for click actions
   icon: React.ReactNode; 
   primary?: boolean 
-}> = ({ title, desc, href, icon, primary }) => (
-  <a
-    href={href}
-    className={`
-      group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl
-      ${primary 
-        ? 'bg-zinc-900 border-zinc-800 hover:border-cyan-500/50 hover:shadow-cyan-900/20' 
-        : 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700'}
-    `}
-  >
-    <div className="flex items-start justify-between mb-4">
-      <div className={`p-3 rounded-lg ${primary ? 'bg-cyan-500/10 text-cyan-400' : 'bg-zinc-800 text-zinc-400'} group-hover:scale-110 transition-transform duration-300`}>
-        {icon}
+}> = ({ title, desc, href, onClick, icon, primary }) => {
+  const Wrapper = href ? 'a' : 'div'; // Render as <a> if link, <div> if button
+  
+  return (
+    <Wrapper
+      href={href}
+      onClick={onClick}
+      className={`
+        group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer
+        ${primary 
+          ? 'bg-zinc-900 border-zinc-800 hover:border-cyan-500/50 hover:shadow-cyan-900/20' 
+          : 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700'}
+      `}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className={`p-3 rounded-lg ${primary ? 'bg-cyan-500/10 text-cyan-400' : 'bg-zinc-800 text-zinc-400'} group-hover:scale-110 transition-transform duration-300`}>
+          {icon}
+        </div>
+        {primary && (
+          <span className="h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_10px_#06b6d4]"></span>
+        )}
       </div>
-      {primary && (
-        <span className="h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_10px_#06b6d4]"></span>
-      )}
-    </div>
-    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{title}</h3>
-    <p className="text-sm text-zinc-400 leading-relaxed">{desc}</p>
-  </a>
-);
+      <h3 className="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{title}</h3>
+      <p className="text-sm text-zinc-400 leading-relaxed">{desc}</p>
+    </Wrapper>
+  );
+};
 
-const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick }) => {
+const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout }) => {
   return (
     <div className="flex flex-col items-center justify-center px-4 sm:px-8 py-12 md:py-20" style={{minHeight: 'calc(100vh - 80px)'}}>
       
-      {/* Hero Section */}
       <div className="text-center mb-12 max-w-2xl">
         <span className="text-xs font-bold text-cyan-500 uppercase tracking-widest mb-2 block">Workspace Dashboard</span>
         <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
@@ -52,7 +57,6 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick }) => {
         </p>
       </div>
 
-      {/* Grid Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
         
         <AppCard 
@@ -71,22 +75,20 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick }) => {
           primary={true}
         />
 
-        {/* Admin Console - Conditional Rendering */}
         {isAdmin && (
-          <div onClick={onAdminClick} className="cursor-pointer">
             <AppCard 
               title="Admin Console"
               desc="Manage users, permissions, and global workspace settings."
-              href="#" 
+              onClick={onAdminClick} // Uses click handler
               icon={<ShieldCheckIcon className="w-8 h-8" />}
             />
-          </div>
         )}
 
+        {/* FIXED: Now triggers the onLogout function */}
         <AppCard 
           title="Sign Out"
           desc="Securely log out of your Flowgent account."
-          href="#" 
+          onClick={onLogout} 
           icon={<LogoutIcon className="w-8 h-8" />}
         />
       </div>

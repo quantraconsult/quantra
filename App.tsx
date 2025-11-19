@@ -68,16 +68,17 @@ const App: React.FC = () => {
         onLogoClick={() => setCurrentView('hub')} // Logo goes home
       />
       
+{/* Pass the isAdmin status to the Hub */}
       {currentView === 'admin' && userProfile?.is_admin ? (
         <AdminView currentUser={userProfile} />
       ) : (
         <Hub 
           companyName="Quantra" 
           isAdmin={userProfile?.is_admin} 
-          onAdminClick={() => setCurrentView('admin')} // Pass handler
+          onAdminClick={() => setCurrentView('admin')}
+          onLogout={handleLogout} // <--- ADD THIS LINE
         />
-      )}
-    </div>
+      )}    </div>
   );
 };
 
