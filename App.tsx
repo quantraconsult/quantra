@@ -63,7 +63,7 @@ const App: React.FC = () => {
         companyName="Quantra" 
         onLogout={handleLogout} 
       />
-      <Hub />
+      <Hub companyName="Quantra" />
     </div>
   );
 };
