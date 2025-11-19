@@ -4,9 +4,17 @@ import ManageUsersModal from './modals/ManageUsersModal';
 import ManageProjectsModal from './modals/ManageProjectsModal';
 import EditUserModal from './modals/EditUserModal';
 
-// Simple Icons for the Admin Cards
-const UsersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
-const ProjectsIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>;
+// FIXED ICONS: Adjusted viewBox and size so they aren't cut off
+const UsersIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+);
+const ProjectsIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+);
 
 const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
     const [users, setUsers] = useState<any[]>([]);
@@ -23,7 +31,6 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
 
     useEffect(() => { fetchData(); }, []);
 
-    // --- User Handlers ---
     const handleApproveUser = async (id: string) => {
         await supabase.from('users').update({ status: 'approved' }).eq('id', id);
         fetchData();
@@ -37,10 +44,9 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
     const handleUpdateUser = async (updatedUser: any) => {
         await supabase.from('users').update({ name: updatedUser.name, email: updatedUser.email, is_admin: updatedUser.is_admin }).eq('id', updatedUser.id);
         fetchData();
-        setActiveModal('users'); // Go back to list
+        setActiveModal('users');
     };
 
-    // --- Project Handlers ---
     const handleAddProject = async (name: string) => {
         const maxSort = projects.reduce((max, p) => Math.max(max, p.sorting), 0);
         await supabase.from('projects').insert({ name, sorting: maxSort + 1 });
@@ -55,7 +61,6 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
         fetchData();
     };
     const handleReorderProject = async (id: string, direction: 'up' | 'down') => {
-        // (Simplified reorder logic for brevity, ideally copy full logic from Planner)
         const idx = projects.findIndex(p => p.id === id);
         if (idx === -1) return;
         const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
@@ -69,33 +74,45 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto px-6 py-12">
-            <h2 className="text-3xl font-bold text-white mb-2">Admin Console</h2>
-            <p className="text-zinc-400 mb-8">Manage your workspace resources and access.</p>
+        <div className="max-w-5xl mx-auto px-6 py-12">
+            <div className="mb-8">
+                <h2 className="text-3xl font-bold text-zinc-100 mb-2">Admin Console</h2>
+                <p className="text-zinc-400">Manage your organization's users and project list.</p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Manage Users Card */}
                 <div 
                     onClick={() => setActiveModal('users')}
-                    className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl hover:border-cyan-500/50 cursor-pointer transition-all group"
+                    className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-cyan-500/40 hover:bg-zinc-800/50 cursor-pointer transition-all group shadow-lg"
                 >
-                    <div className="bg-zinc-800 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-cyan-900/30 group-hover:text-cyan-400 text-zinc-400 transition-colors">
-                        <UsersIcon />
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="bg-zinc-800 p-3 rounded-xl group-hover:bg-cyan-500/10 group-hover:text-cyan-400 text-zinc-400 transition-colors">
+                            <UsersIcon />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-zinc-100 group-hover:text-cyan-400 transition-colors">Users</h3>
+                            <span className="text-xs font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full">{users.length} active</span>
+                        </div>
                     </div>
-                    <h3 className="text-xl font-bold text-white">Manage Users</h3>
-                    <p className="text-sm text-zinc-500 mt-1">{users.length} active users</p>
+                    <p className="text-sm text-zinc-400 leading-relaxed">Add new team members, approve registrations, and manage permissions.</p>
                 </div>
 
                 {/* Manage Projects Card */}
                 <div 
                     onClick={() => setActiveModal('projects')}
-                    className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl hover:border-cyan-500/50 cursor-pointer transition-all group"
+                    className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-cyan-500/40 hover:bg-zinc-800/50 cursor-pointer transition-all group shadow-lg"
                 >
-                     <div className="bg-zinc-800 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-cyan-900/30 group-hover:text-cyan-400 text-zinc-400 transition-colors">
-                        <ProjectsIcon />
+                     <div className="flex items-center gap-4 mb-4">
+                        <div className="bg-zinc-800 p-3 rounded-xl group-hover:bg-cyan-500/10 group-hover:text-cyan-400 text-zinc-400 transition-colors">
+                            <ProjectsIcon />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-zinc-100 group-hover:text-cyan-400 transition-colors">Projects</h3>
+                            <span className="text-xs font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full">{projects.length} active</span>
+                        </div>
                     </div>
-                    <h3 className="text-xl font-bold text-white">Manage Projects</h3>
-                    <p className="text-sm text-zinc-500 mt-1">{projects.length} active projects</p>
+                    <p className="text-sm text-zinc-400 leading-relaxed">Create, rename, and reorder projects across the entire workspace.</p>
                 </div>
             </div>
 
@@ -108,7 +125,7 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                     onDeleteUser={handleDeleteUser}
                     onEditUser={(u) => { setUserToEdit(u); setActiveModal('editUser'); }}
                     currentUser={currentUser}
-                    tasks={[]} // Pass empty if not needed for delete validation in Hub
+                    tasks={[]} 
                 />
             )}
             {activeModal === 'projects' && (
@@ -119,7 +136,7 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                     onRemoveItem={handleDeleteProject}
                     onReorderItem={handleReorderProject}
                     onUpdateItemName={handleUpdateProjectName}
-                    tasks={[]} completedTasks={[]} // Pass empty for validation check skip
+                    tasks={[]} completedTasks={[]}
                 />
             )}
              {activeModal === 'editUser' && userToEdit && (
