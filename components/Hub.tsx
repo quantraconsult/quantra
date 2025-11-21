@@ -5,96 +5,162 @@ interface HubProps {
   companyName: string;
   isAdmin: boolean;
   onAdminClick: () => void;
-  onLogout: () => void; // NEW: Added logout prop
+  onLogout: () => void;
 }
 
-const AppCard: React.FC<{ 
-  title: string; 
-  desc: string; 
-  href?: string; 
-  onClick?: () => void; // NEW: Support for click actions
-  icon: React.ReactNode; 
-  primary?: boolean 
+const MobileAppRow: React.FC<{
+  title: string;
+  desc: string;
+  href?: string;
+  onClick?: () => void;
+  icon: React.ReactNode;
+}> = ({ title, desc, href, onClick, icon }) => {
+  const Wrapper = href ? 'a' : 'div';
+  return (
+    <Wrapper
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-4 p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl active:bg-zinc-800 transition-colors cursor-pointer"
+    >
+      <div className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="text-base font-bold text-white truncate">{title}</h3>
+        <p className="text-xs text-zinc-500 truncate">{desc}</p>
+      </div>
+      <div className="text-zinc-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+      </div>
+    </Wrapper>
+  )
+}
+
+const AppCard: React.FC<{
+  title: string;
+  desc: string;
+  href?: string;
+  onClick?: () => void;
+  icon: React.ReactNode;
+  primary?: boolean
 }> = ({ title, desc, href, onClick, icon, primary }) => {
-  const Wrapper = href ? 'a' : 'div'; // Render as <a> if link, <div> if button
-  
+  const Wrapper = href ? 'a' : 'div';
+
   return (
     <Wrapper
       href={href}
       onClick={onClick}
       className={`
-        group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer
-        ${primary 
-          ? 'bg-zinc-900 border-zinc-800 hover:border-cyan-500/50 hover:shadow-cyan-900/20' 
-          : 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700'}
+        group relative overflow-hidden rounded-xl border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer
+        ${primary
+          ? 'bg-zinc-900 border-zinc-800 hover:border-cyan-500/30 hover:shadow-cyan-900/10'
+          : 'bg-zinc-900/30 border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700'}
       `}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-lg ${primary ? 'bg-cyan-500/10 text-cyan-400' : 'bg-zinc-800 text-zinc-400'} group-hover:scale-110 transition-transform duration-300`}>
-          {icon}
+      <div className="flex items-center justify-between mb-3">
+        <div className={`p-2 rounded-lg ${primary ? 'bg-cyan-500/10 text-cyan-400' : 'bg-zinc-800 text-zinc-400'} group-hover:scale-105 transition-transform duration-300`}>
+          {React.cloneElement(icon as React.ReactElement, { className: "w-6 h-6" })}
         </div>
         {primary && (
-          <span className="h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_10px_#06b6d4]"></span>
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_#06b6d4]"></span>
         )}
       </div>
-      <h3 className="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{title}</h3>
-      <p className="text-sm text-zinc-400 leading-relaxed">{desc}</p>
+      <h3 className="text-lg font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{title}</h3>
+      <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
     </Wrapper>
   );
 };
 
 const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout }) => {
   return (
-    <div className="flex flex-col items-center justify-center px-4 sm:px-8 py-12 md:py-20" style={{minHeight: 'calc(100vh - 80px)'}}>
-      
-      <div className="text-center mb-12 max-w-2xl">
-        <span className="text-xs font-bold text-cyan-500 uppercase tracking-widest mb-2 block">Workspace Dashboard</span>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
-          Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">{companyName}</span>
+    <div className="min-h-screen flex flex-col bg-[#121212]">
+      {/* Mobile Header */}
+      <div className="md:hidden p-6 pb-0 pt-10">
+        <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-1 block">Workspace</span>
+        <h1 className="text-2xl font-extrabold text-white tracking-tight">
+          {companyName} <span className="text-zinc-600">Hub</span>
         </h1>
-        <p className="text-zinc-400 text-lg">
-          Select a module below to manage your projects, track time, or configure your workspace settings.
-        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-        
-        <AppCard 
-          title="Project Planner"
-          desc="Manage tasks, assign team members, and track project deadlines efficiently."
-          href="https://planner.quantra.co.za" 
-          icon={<CalendarIcon className="w-8 h-8" />}
-          primary={true}
-        />
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-8 md:py-20">
 
-        <AppCard 
-          title="Timesheets"
-          desc="Log your daily hours, site visits, and travel claims for approval."
-          href="https://timesheets.quantra.co.za" 
-          icon={<ClockIcon className="w-8 h-8" />}
-          primary={true}
-        />
+        {/* Desktop Header */}
+        <div className="hidden md:block text-center mb-10 max-w-2xl">
+          <span className="text-xs font-bold text-cyan-500 uppercase tracking-widest mb-2 block">Workspace Dashboard</span>
+          <h1 className="text-4xl font-extrabold text-white tracking-tight mb-3">
+            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">{companyName}</span>
+          </h1>
+          <p className="text-zinc-500 text-base">
+            Select a module below to manage your projects, track time, or configure your workspace settings.
+          </p>
+        </div>
 
-        {isAdmin && (
-            <AppCard 
+        {/* Desktop Grid */}
+        <div className="hidden md:grid grid-cols-2 gap-4 w-full max-w-3xl">
+          <AppCard
+            title="Project Planner"
+            desc="Manage tasks & deadlines."
+            href="http://localhost:3000"
+            icon={<CalendarIcon />}
+            primary={true}
+          />
+          <AppCard
+            title="Timesheets"
+            desc="Log hours & travel."
+            href="http://localhost:3002"
+            icon={<ClockIcon />}
+            primary={true}
+          />
+          {isAdmin && (
+            <AppCard
               title="Admin Console"
-              desc="Manage users, permissions, and global workspace settings."
-              onClick={onAdminClick} // Uses click handler
-              icon={<ShieldCheckIcon className="w-8 h-8" />}
+              desc="Manage users & settings."
+              onClick={onAdminClick}
+              icon={<ShieldCheckIcon />}
             />
-        )}
+          )}
+          <AppCard
+            title="Sign Out"
+            desc="Log out of your account."
+            onClick={onLogout}
+            icon={<LogoutIcon />}
+          />
+        </div>
 
-        {/* FIXED: Now triggers the onLogout function */}
-        <AppCard 
-          title="Sign Out"
-          desc="Securely log out of your Flowgent account."
-          onClick={onLogout} 
-          icon={<LogoutIcon className="w-8 h-8" />}
-        />
+        {/* Mobile List */}
+        <div className="md:hidden w-full flex flex-col gap-3 mt-6">
+          <MobileAppRow
+            title="Project Planner"
+            desc="Tasks & Deadlines"
+            href="http://localhost:3000"
+            icon={<CalendarIcon className="w-5 h-5" />}
+          />
+          <MobileAppRow
+            title="Timesheets"
+            desc="Hours & Travel"
+            href="http://localhost:3002"
+            icon={<ClockIcon className="w-5 h-5" />}
+          />
+          {isAdmin && (
+            <MobileAppRow
+              title="Admin Console"
+              desc="Users & Settings"
+              onClick={onAdminClick}
+              icon={<ShieldCheckIcon className="w-5 h-5" />}
+            />
+          )}
+          <MobileAppRow
+            title="Sign Out"
+            desc="End Session"
+            onClick={onLogout}
+            icon={<LogoutIcon className="w-5 h-5" />}
+          />
+        </div>
       </div>
 
-      <footer className="mt-16 text-center text-zinc-600 text-sm">
-        Flowgent v1.0 &bull; Secure Workspace Environment
+      <footer className="py-6 text-center text-zinc-700 text-xs">
+        Flowgent v1.0 &bull; Secure Workspace
       </footer>
     </div>
   );
