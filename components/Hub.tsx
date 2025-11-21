@@ -101,14 +101,14 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
           <AppCard
             title="Project Planner"
             desc="Manage tasks & deadlines."
-            href="http://localhost:3000"
+            href="https://planner.quantra.co.za"
             icon={<CalendarIcon />}
             primary={true}
           />
           <AppCard
             title="Timesheets"
             desc="Log hours & travel."
-            href="http://localhost:3002"
+            href="https://timesheets.quantra.co.za"
             icon={<ClockIcon />}
             primary={true}
           />
@@ -133,13 +133,13 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
           <MobileAppRow
             title="Project Planner"
             desc="Tasks & Deadlines"
-            href="http://localhost:3000"
+            href="https://planner.quantra.co.za"
             icon={<CalendarIcon className="w-5 h-5" />}
           />
           <MobileAppRow
             title="Timesheets"
             desc="Hours & Travel"
-            href="http://localhost:3002"
+            href="https://timesheets.quantra.co.za"
             icon={<ClockIcon className="w-5 h-5" />}
           />
           {isAdmin && (
