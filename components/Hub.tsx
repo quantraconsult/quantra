@@ -1,5 +1,6 @@
 import React from 'react';
 import { CalendarIcon, ClockIcon, ShieldCheckIcon, LogoutIcon } from './Icons';
+import { FlowgentLogo } from './Logo';
 
 interface HubProps {
   companyName: string;
@@ -74,18 +75,54 @@ const AppCard: React.FC<{
 const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout }) => {
   return (
     <div className="min-h-screen flex flex-col bg-[#121212]">
-      {/* Mobile Header */}
-      <div className="md:hidden p-6 pb-0 pt-10">
-        <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-1 block">Workspace</span>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight">
-          {companyName} <span className="text-zinc-600">Hub</span>
-        </h1>
-      </div>
+      {/* HEADER (Matches Planner App) */}
+      <header className="bg-[#121212] border-b border-zinc-800 sticky top-0 z-50 mb-8">
+        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-20 py-4 md:py-0 gap-4">
+            <div className="w-full md:w-auto flex justify-between items-center">
+              <div className="flex items-center gap-6">
+                <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <FlowgentLogo className="scale-90 sm:scale-100 origin-left" />
+                </a>
+
+                {/* Mobile Workspace Text */}
+                <div className="md:hidden flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest leading-none mb-0.5">Workspace</span>
+                  <span className="text-xs font-bold text-white leading-none">Quantra Hub</span>
+                </div>
+
+                <div className="h-8 w-px bg-zinc-800 hidden sm:block"></div>
+                <div className="hidden sm:flex flex-col justify-center">
+                  <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">App</span>
+                  <span className="text-sm font-bold text-white">Hub</span>
+                </div>
+              </div>
+
+              {/* Mobile Logout */}
+              <div className="md:hidden">
+                <button onClick={onLogout} className="text-zinc-400 hover:text-red-400 transition-colors p-2">
+                  <LogoutIcon className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Controls */}
+            <div className="hidden md:flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <button onClick={onLogout} className="text-zinc-400 hover:text-red-400 transition-colors flex items-center gap-2" title="Logout">
+                  <span className="text-sm font-medium text-white hidden sm:block">Sign Out</span>
+                  <LogoutIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-8 md:py-20">
 
-        {/* Desktop Header */}
+        {/* Desktop Header (Welcome Message) */}
         <div className="hidden md:block text-center mb-10 max-w-2xl">
           <span className="text-xs font-bold text-cyan-500 uppercase tracking-widest mb-2 block">Workspace Dashboard</span>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mb-3">
