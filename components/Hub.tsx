@@ -76,7 +76,7 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
   return (
     <div className="min-h-screen flex flex-col bg-[#121212]">
       {/* HEADER (Matches Planner App) */}
-      <header className="bg-[#121212] border-b border-zinc-800 sticky top-0 z-50 mb-8">
+      <header className="bg-primary border-b border-border-color sticky top-0 z-50 mb-8">
         <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-20 py-4 md:py-0 gap-4">
             <div className="w-full md:w-auto flex justify-between items-center">
@@ -88,19 +88,18 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
                 {/* Mobile Workspace Text */}
                 <div className="md:hidden flex flex-col justify-center">
                   <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest leading-none mb-0.5">Workspace</span>
-                  <span className="text-xs font-bold text-white leading-none">Quantra Hub</span>
+                  <span className="text-xs font-bold text-text-primary leading-none">Quantra Hub</span>
                 </div>
 
-                <div className="h-8 w-px bg-zinc-800 hidden sm:block"></div>
+                <div className="h-8 w-px bg-border-color hidden sm:block"></div>
                 <div className="hidden sm:flex flex-col justify-center">
-                  <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">App</span>
-                  <span className="text-sm font-bold text-white">Hub</span>
+                  <span className="text-xs text-text-secondary font-bold uppercase tracking-wider">App</span>
+                  <span className="text-sm font-bold text-text-primary">Hub</span>
                 </div>
               </div>
 
-              {/* Mobile Logout */}
               <div className="md:hidden">
-                <button onClick={onLogout} className="text-zinc-400 hover:text-red-400 transition-colors p-2">
+                <button onClick={onLogout} className="text-text-secondary hover:text-red-400 transition-colors p-2">
                   <LogoutIcon className="w-6 h-6" />
                 </button>
               </div>
@@ -109,8 +108,8 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
             {/* Desktop Controls */}
             <div className="hidden md:flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <button onClick={onLogout} className="text-zinc-400 hover:text-red-400 transition-colors flex items-center gap-2" title="Logout">
-                  <span className="text-sm font-medium text-white hidden sm:block">Sign Out</span>
+                <button onClick={onLogout} className="text-text-secondary hover:text-red-400 transition-colors flex items-center gap-2" title="Logout">
+                  <span className="text-sm font-medium text-text-primary hidden sm:block">{companyName}</span>
                   <LogoutIcon className="w-5 h-5" />
                 </button>
               </div>
