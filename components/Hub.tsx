@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarIcon, ClockIcon, ShieldCheckIcon, LogoutIcon } from './Icons';
+import { CalendarIcon, ClockIcon, ShieldCheckIcon, LogoutIcon, BookIcon } from './Icons';
 
 interface HubProps {
   companyName: string;
@@ -104,6 +104,13 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
             icon={<ClockIcon />}
             primary={true}
           />
+          <AppCard
+            title="Farm Diary"
+            desc="Daily logs & livestock."
+            href="https://farm-diary-one.vercel.app/"
+            icon={<BookIcon />}
+            primary={true}
+          />
           {isAdmin && (
             <AppCard
               title="Admin Console"
@@ -133,6 +140,12 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
             desc="Hours & Travel"
             href="https://timesheets.quantra.co.za"
             icon={<ClockIcon className="w-5 h-5" />}
+          />
+          <MobileAppRow
+            title="Farm Diary"
+            desc="Daily Logs"
+            href="https://farm-diary-one.vercel.app/"
+            icon={<BookIcon className="w-5 h-5" />}
           />
           {isAdmin && (
             <MobileAppRow
