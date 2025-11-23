@@ -6,6 +6,7 @@ interface HubProps {
   isAdmin: boolean;
   onAdminClick: () => void;
   onLogout: () => void;
+  userOrgs: any[];
 }
 
 const MobileAppRow: React.FC<{
@@ -71,7 +72,11 @@ const AppCard: React.FC<{
   );
 };
 
-const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout }) => {
+const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout, userOrgs }) => {
+
+  const hasAgri = userOrgs.some(org => org.type === 'agri');
+  const hasPro = userOrgs.some(org => org.type === 'pro' || !org.type); // Default to pro if type is missing
+
   return (
     <div className="min-h-screen flex flex-col bg-[#121212]">
       {/* Main Content */}
@@ -90,27 +95,33 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
 
         {/* Desktop Grid */}
         <div className="hidden md:grid grid-cols-2 gap-4 w-full max-w-3xl">
-          <AppCard
-            title="Project Planner"
-            desc="Manage tasks & deadlines."
-            href="https://planner.quantra.co.za"
-            icon={<CalendarIcon />}
-            primary={true}
-          />
-          <AppCard
-            title="Timesheets"
-            desc="Log hours & travel."
-            href="https://timesheets.quantra.co.za"
-            icon={<ClockIcon />}
-            primary={true}
-          />
-          <AppCard
-            title="Farm Diary"
-            desc="Daily logs & livestock."
-            href="https://farm-diary-one.vercel.app/"
-            icon={<BookIcon />}
-            primary={true}
-          />
+          {hasPro && (
+            <>
+              <AppCard
+                title="Project Planner"
+                desc="Manage tasks & deadlines."
+                href="https://planner.quantra.co.za"
+                icon={<CalendarIcon />}
+                primary={true}
+              />
+              <AppCard
+                title="Timesheets"
+                desc="Log hours & travel."
+                href="https://timesheets.quantra.co.za"
+                icon={<ClockIcon />}
+                primary={true}
+              />
+            </>
+          )}
+          {hasAgri && (
+            <AppCard
+              title="Farm Diary"
+              desc="Daily logs & livestock."
+              href="https://farm-diary-one.vercel.app/"
+              icon={<BookIcon />}
+              primary={true}
+            />
+          )}
           {isAdmin && (
             <AppCard
               title="Admin Console"
@@ -129,24 +140,30 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
 
         {/* Mobile List */}
         <div className="md:hidden w-full flex flex-col gap-3 mt-6">
-          <MobileAppRow
-            title="Project Planner"
-            desc="Tasks & Deadlines"
-            href="https://planner.quantra.co.za"
-            icon={<CalendarIcon className="w-5 h-5" />}
-          />
-          <MobileAppRow
-            title="Timesheets"
-            desc="Hours & Travel"
-            href="https://timesheets.quantra.co.za"
-            icon={<ClockIcon className="w-5 h-5" />}
-          />
-          <MobileAppRow
-            title="Farm Diary"
-            desc="Daily Logs"
-            href="https://farm-diary-one.vercel.app/"
-            icon={<BookIcon className="w-5 h-5" />}
-          />
+          {hasPro && (
+            <>
+              <MobileAppRow
+                title="Project Planner"
+                desc="Tasks & Deadlines"
+                href="https://planner.quantra.co.za"
+                icon={<CalendarIcon className="w-5 h-5" />}
+              />
+              <MobileAppRow
+                title="Timesheets"
+                desc="Hours & Travel"
+                href="https://timesheets.quantra.co.za"
+                icon={<ClockIcon className="w-5 h-5" />}
+              />
+            </>
+          )}
+          {hasAgri && (
+            <MobileAppRow
+              title="Farm Diary"
+              desc="Daily Logs"
+              href="https://farm-diary-one.vercel.app/"
+              icon={<BookIcon className="w-5 h-5" />}
+            />
+          )}
           {isAdmin && (
             <MobileAppRow
               title="Admin Console"

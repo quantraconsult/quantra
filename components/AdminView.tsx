@@ -4,7 +4,7 @@ import ManageUsersModal from './modals/ManageUsersModal';
 import ManageProjectsModal from './modals/ManageProjectsModal';
 import EditUserModal from './modals/EditUserModal';
 
-// UPDATED ICONS: Standard Lucide paths + overflow-visible to prevent clipping
+// ICONS
 const UsersIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 overflow-visible" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -23,47 +23,133 @@ const ProjectsIcon = () => (
 const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
     const [users, setUsers] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
+    const [userOrgs, setUserOrgs] = useState<any[]>([]);
     const [activeModal, setActiveModal] = useState<'users' | 'projects' | 'editUser' | null>(null);
     const [userToEdit, setUserToEdit] = useState<any>(null);
 
     const fetchData = async () => {
-        const { data: u } = await supabase.from('users').select('*').order('name');
-        const { data: p } = await supabase.from('projects').select('*').order('sorting');
-        if (u) setUsers(u);
-        if (p) setProjects(p);
+        try {
+            // 1. Fetch User's Admin Orgs
+            const { data: orgMembers } = await supabase
+                .from('organization_members')
+                .select('organization_id, role, organizations(*)')
+                .eq('user_id', currentUser.id)
+                .in('role', ['admin', 'owner']);
+
+            const myOrgs = orgMembers?.map((m: any) => m.organizations) || [];
+            setUserOrgs(myOrgs);
+            const orgIds = myOrgs.map(o => o.id);
+
+            // 2. Fetch Users
+            let usersData: any[] = [];
+            if (currentUser.is_admin) {
+                // Global admin sees all
+                const { data } = await supabase.from('users').select('*').order('name');
+                usersData = data || [];
+            } else if (orgIds.length > 0) {
+                // Org admin sees members of their orgs
+                const { data } = await supabase
+                    .from('organization_members')
+                    .select('user_id, users(*)')
+                    .in('organization_id', orgIds);
+
+                const uniqueUsers = new Map();
+                data?.forEach((item: any) => {
+                    if (item.users) uniqueUsers.set(item.users.id, item.users);
+                });
+                usersData = Array.from(uniqueUsers.values());
+            }
+            setUsers(usersData.sort((a, b) => a.name.localeCompare(b.name)));
+
+            // 3. Fetch Projects
+            let projectsData: any[] = [];
+            if (currentUser.is_admin) {
+                const { data } = await supabase.from('projects').select('*').order('sorting');
+                projectsData = data || [];
+            } else if (orgIds.length > 0) {
+                const { data } = await supabase.from('projects').select('*').in('organization_id', orgIds).order('sorting');
+                projectsData = data || [];
+            }
+            setProjects(projectsData);
+
+        } catch (error) {
+            console.error("Error fetching admin data:", error);
+        }
     };
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchData(); }, [currentUser]);
 
     const handleApproveUser = async (id: string) => {
         await supabase.from('users').update({ status: 'approved' }).eq('id', id);
         fetchData();
     };
+
     const handleDeleteUser = async (id: string) => {
         if (confirm('Are you sure? This will remove their access.')) {
             await supabase.from('users').delete().eq('id', id);
             fetchData();
         }
     };
+
     const handleUpdateUser = async (updatedUser: any) => {
         await supabase.from('users').update({ name: updatedUser.name, email: updatedUser.email, is_admin: updatedUser.is_admin }).eq('id', updatedUser.id);
         fetchData();
         setActiveModal('users');
     };
 
+    const handleAddMember = async (email: string, organizationId: string) => {
+        const { data: user, error: userError } = await supabase.from('users').select('id').eq('email', email).single();
+        if (userError || !user) {
+            alert("User not found. Please ask them to register first.");
+            return;
+        }
+        const { data: existingMember } = await supabase.from('organization_members').select('id').eq('organization_id', organizationId).eq('user_id', user.id).single();
+        if (existingMember) {
+            alert("User is already a member of this organization.");
+            return;
+        }
+        const { error: insertError } = await supabase.from('organization_members').insert({ organization_id: organizationId, user_id: user.id, role: 'member' });
+        if (insertError) {
+            console.error("Error adding member:", insertError);
+            alert("Failed to add member: " + insertError.message);
+        } else {
+            alert("Member added successfully!");
+            await fetchData();
+        }
+    };
+
     const handleAddProject = async (name: string) => {
+        // Default to first org if not specified (Modal needs updating to support org selection if multiple)
+        // For now, if user has orgs, pick first. If global admin without orgs, this might fail or need 'organization_id'
+        const orgId = userOrgs[0]?.id;
+        if (!orgId && !currentUser.is_admin) {
+            alert("No organization found to add project to.");
+            return;
+        }
+
         const maxSort = projects.reduce((max, p) => Math.max(max, p.sorting), 0);
-        await supabase.from('projects').insert({ name, sorting: maxSort + 1 });
+        // If global admin, might need to prompt for org. 
+        // Assuming ManageProjectsModal handles org selection or we default.
+        // Current ManageProjectsModal in Hub is likely simple. 
+        // We will just insert with orgId if available.
+
+        const payload: any = { name, sorting: maxSort + 1 };
+        if (orgId) payload.organization_id = orgId;
+
+        await supabase.from('projects').insert(payload);
         fetchData();
     };
+
     const handleDeleteProject = async (id: string) => {
-         await supabase.from('projects').delete().eq('id', id);
-         fetchData();
+        await supabase.from('projects').delete().eq('id', id);
+        fetchData();
     };
+
     const handleUpdateProjectName = async (id: string, name: string) => {
         await supabase.from('projects').update({ name }).eq('id', id);
         fetchData();
     };
+
     const handleReorderProject = async (id: string, direction: 'up' | 'down') => {
         const idx = projects.findIndex(p => p.id === id);
         if (idx === -1) return;
@@ -86,7 +172,7 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Manage Users Card */}
-                <div 
+                <div
                     onClick={() => setActiveModal('users')}
                     className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-cyan-500/40 hover:bg-zinc-800/50 cursor-pointer transition-all group shadow-lg"
                 >
@@ -103,11 +189,11 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                 </div>
 
                 {/* Manage Projects Card */}
-                <div 
+                <div
                     onClick={() => setActiveModal('projects')}
                     className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-cyan-500/40 hover:bg-zinc-800/50 cursor-pointer transition-all group shadow-lg"
                 >
-                     <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-4 mb-4">
                         <div className="bg-zinc-800 p-3 rounded-xl group-hover:bg-cyan-500/10 group-hover:text-cyan-400 text-zinc-400 transition-colors">
                             <ProjectsIcon />
                         </div>
@@ -122,14 +208,16 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
 
             {/* MODALS */}
             {activeModal === 'users' && (
-                <ManageUsersModal 
+                <ManageUsersModal
                     users={users}
                     onClose={() => setActiveModal(null)}
                     onApproveUser={handleApproveUser}
                     onDeleteUser={handleDeleteUser}
                     onEditUser={(u) => { setUserToEdit(u); setActiveModal('editUser'); }}
+                    onAddMember={handleAddMember}
                     currentUser={currentUser}
-                    tasks={[]} 
+                    tasks={[]}
+                    organizations={userOrgs}
                 />
             )}
             {activeModal === 'projects' && (
@@ -143,7 +231,7 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                     tasks={[]} completedTasks={[]}
                 />
             )}
-             {activeModal === 'editUser' && userToEdit && (
+            {activeModal === 'editUser' && userToEdit && (
                 <EditUserModal
                     user={userToEdit}
                     onClose={() => setActiveModal('users')}
