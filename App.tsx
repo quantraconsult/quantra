@@ -88,10 +88,14 @@ const App: React.FC = () => {
       if (profileError) {
         console.error("Error creating user profile:", profileError);
         // Don't fail the whole registration, but log it. 
-        // The user might already exist if trigger fired.
       }
     }
-    return { success: true, message: "Account created!" };
+
+    if (data.user && !data.session) {
+      return { success: true, message: "Account created! Please check your email to confirm." };
+    }
+
+    return { success: true, message: "Account created! You can now sign in." };
   };
 
   const handleLogout = async () => {
