@@ -76,20 +76,6 @@ const App: React.FC = () => {
     });
     if (error) return { success: false, message: error.message };
 
-    if (data.user) {
-      // Manually insert into public.users to ensure profile exists
-      const { error: profileError } = await supabase.from('users').insert({
-        id: data.user.id,
-        name: name,
-        email: email,
-        status: 'pending', // Default status
-        is_admin: false
-      });
-      if (profileError) {
-        console.error("Error creating user profile:", profileError);
-        // Don't fail the whole registration, but log it. 
-      }
-    }
 
     if (data.user && !data.session) {
       return { success: true, message: "Account created! Please check your email to confirm." };
