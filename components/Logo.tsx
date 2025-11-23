@@ -1,13 +1,11 @@
 import React from 'react';
 
-export const FlowgentLogo: React.FC<{ className?: string }> = ({ className }) => {
+export const FlogentLogo: React.FC<{ className?: string }> = ({ className }) => {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="h-8 w-8 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center text-black font-bold text-xl">
-        F
-      </div>
+      <img src="/flogent-logo.png" alt="Flogent" className="h-8 w-8 rounded-lg" />
       <span className="font-bold text-2xl tracking-tight text-white">
-        Flowgent<span className="text-cyan-400 text-lg">.co.za</span>
+        Flogent<span className="text-cyan-400 text-lg">.co.za</span>
       </span>
     </div>
   );

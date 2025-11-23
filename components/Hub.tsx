@@ -165,7 +165,7 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout 
       </div>
 
       <footer className="py-6 text-center text-zinc-700 text-xs">
-        Flowgent v1.0 &bull; Secure Workspace
+        Flogent v1.0 &bull; Secure Workspace
       </footer>
     </div>
   );
