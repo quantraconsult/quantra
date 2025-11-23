@@ -29,14 +29,20 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
 
     const fetchData = async () => {
         try {
-            // 1. Fetch User's Admin Orgs
-            const { data: orgMembers } = await supabase
-                .from('organization_members')
-                .select('organization_id, role, organizations(*)')
-                .eq('user_id', currentUser.id)
-                .in('role', ['admin', 'owner']);
+            // 1. Fetch Organizations (All for Global Admin, Member Orgs for others)
+            let myOrgs: any[] = [];
+            if (currentUser.is_admin) {
+                const { data: allOrgs } = await supabase.from('organizations').select('*').order('name');
+                myOrgs = allOrgs || [];
+            } else {
+                const { data: orgMembers } = await supabase
+                    .from('organization_members')
+                    .select('organization_id, role, organizations(*)')
+                    .eq('user_id', currentUser.id)
+                    .in('role', ['admin', 'owner']);
 
-            const myOrgs = orgMembers?.map((m: any) => m.organizations) || [];
+                myOrgs = orgMembers?.map((m: any) => m.organizations) || [];
+            }
             setUserOrgs(myOrgs);
             const orgIds = myOrgs.map(o => o.id);
 
