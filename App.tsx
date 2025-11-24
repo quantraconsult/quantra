@@ -10,6 +10,8 @@ const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userOrgs, setUserOrgs] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [currentView, setCurrentView] = useState<'hub' | 'admin' | 'onboarding'>('hub');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +31,15 @@ const App: React.FC = () => {
       const orgs = orgMembers?.map((m: any) => m.organizations) || [];
       setUserOrgs(orgs);
 
-      // 3. Determine View
+      // 3. Fetch Departments
+      const { data: depts } = await supabase.from('departments').select('*');
+      setDepartments(depts || []);
+
+      // 4. Fetch Projects
+      const { data: projs } = await supabase.from('projects').select('*').order('sorting', { ascending: true });
+      setProjects(projs || []);
+
+      // 5. Determine View
       if (orgs.length === 0) {
         setCurrentView('onboarding');
       } else {
@@ -84,7 +94,7 @@ const App: React.FC = () => {
         email: email,
         status: 'approved', // Auto-approve new registrations
         is_admin: false
-      });
+      } as any); // Type assertion to bypass strict typing issues for now
       if (profileError) {
         console.error("Error creating user profile:", profileError);
         // Don't fail the whole registration, but log it. 
@@ -133,7 +143,9 @@ const App: React.FC = () => {
           isAdmin={userProfile?.is_admin}
           onAdminClick={() => setCurrentView('admin')}
           onLogout={handleLogout}
-          userOrgs={userOrgs} // Pass orgs to Hub
+          userOrgs={userOrgs}
+          departments={departments}
+          projects={projects}
         />
       )}
     </div>

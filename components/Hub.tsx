@@ -1,218 +1,133 @@
-import React from 'react';
-import { CalendarIcon, ClockIcon, ShieldCheckIcon, LogoutIcon, BookIcon } from './Icons';
+import React, { useState, useEffect } from 'react';
+import { CalendarIcon, ClockIcon, ShieldCheckIcon, BookIcon } from './Icons';
+import { Organization, Department, Project } from '../types';
 
 interface HubProps {
   companyName: string;
   isAdmin: boolean;
   onAdminClick: () => void;
   onLogout: () => void;
-  userOrgs: any[];
+  userOrgs: Organization[];
+  departments: Department[];
+  projects: Project[];
 }
 
-const MobileAppRow: React.FC<{
-  title: string;
-  desc: string;
-  href?: string;
-  onClick?: () => void;
-  icon: React.ReactNode;
-}> = ({ title, desc, href, onClick, icon }) => {
-  const Wrapper = href ? 'a' : 'div';
-  return (
-    <Wrapper
-      href={href}
-      onClick={onClick}
-      className="flex items-center gap-4 p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl active:bg-zinc-800 transition-colors cursor-pointer"
-    >
-      <div className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400">
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-base font-bold text-white truncate">{title}</h3>
-        <p className="text-xs text-zinc-500 truncate">{desc}</p>
-      </div>
-      <div className="text-zinc-600">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-      </div>
-    </Wrapper>
-  )
-}
+const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout, userOrgs, departments, projects }) => {
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 
-const AppCard: React.FC<{
-  title: string;
-  desc: string;
-  href?: string;
-  onClick?: () => void;
-  icon: React.ReactNode;
-  primary?: boolean
-}> = ({ title, desc, href, onClick, icon, primary }) => {
-  const Wrapper = href ? 'a' : 'div';
+  // Auto-select first org
+  useEffect(() => {
+    if (userOrgs.length > 0 && !selectedOrgId) {
+      setSelectedOrgId(userOrgs[0].id);
+    }
+  }, [userOrgs, selectedOrgId]);
 
-  return (
-    <Wrapper
-      href={href}
-      onClick={onClick}
-      className={`
-        group relative overflow-hidden rounded-xl border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer
-        ${primary
-          ? 'bg-zinc-900 border-zinc-800 hover:border-cyan-500/30 hover:shadow-cyan-900/10'
-          : 'bg-zinc-900/30 border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700'}
-      `}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className={`p-2 rounded-lg ${primary ? 'bg-cyan-500/10 text-cyan-400' : 'bg-zinc-800 text-zinc-400'} group-hover:scale-105 transition-transform duration-300`}>
-          {React.cloneElement(icon as React.ReactElement, { className: "w-6 h-6" })}
-        </div>
-        {primary && (
-          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_#06b6d4]"></span>
-        )}
-      </div>
-      <h3 className="text-lg font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{title}</h3>
-      <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
-    </Wrapper>
-  );
-};
-
-const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout, userOrgs }) => {
+  const currentDepts = selectedOrgId
+    ? departments.filter(d => d.organization_id === selectedOrgId)
+    : [];
 
   const hasAgri = userOrgs.some(org => org.type === 'agri');
-  const hasPro = userOrgs.some(org => org.type === 'pro' || !org.type); // Default to pro if type is missing
+  const hasPro = userOrgs.some(org => org.type === 'pro' || !org.type);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#121212]">
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-8 md:py-20">
+    <div className="h-[calc(100vh-64px)] flex bg-[#121212]">
 
-        {/* Desktop Header (Welcome Message) */}
-        <div className="hidden md:block text-center mb-10 max-w-2xl">
-          <span className="text-xs font-bold text-cyan-500 uppercase tracking-widest mb-2 block">Workspace Dashboard</span>
-          <h1 className="text-4xl font-extrabold text-white tracking-tight mb-3">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">{companyName}</span>
-          </h1>
-          <p className="text-zinc-500 text-base">
-            Select a module below to manage your projects, track time, or configure your workspace settings.
-          </p>
-        </div>
-
-        {/* Desktop Grid */}
-        <div className="hidden md:grid grid-cols-2 gap-4 w-full max-w-3xl">
+      {/* Left Sidebar - App Links */}
+      <div className="w-96 border-r border-zinc-800 flex flex-col bg-zinc-900/30 p-8">
+        <div className="flex flex-col gap-5">
           {hasPro && (
             <>
-              <AppCard
-                title="Project Planner"
-                desc="Manage tasks & deadlines."
+              <a
                 href="https://planner.quantra.co.za"
-                icon={<CalendarIcon />}
-                primary={true}
-              />
-              <AppCard
-                title="Timesheets"
-                desc="Log hours & travel."
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-5 px-8 py-5 rounded-xl text-zinc-200 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all duration-200 group border border-zinc-700 hover:border-cyan-500/40 shadow-lg hover:shadow-cyan-900/20"
+              >
+                <CalendarIcon className="w-7 h-7" />
+                <span className="text-xl font-bold">Planner</span>
+              </a>
+              <a
                 href="https://timesheets.quantra.co.za"
-                icon={<ClockIcon />}
-                primary={true}
-              />
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-5 px-8 py-5 rounded-xl text-zinc-200 hover:text-orange-400 hover:bg-orange-500/10 transition-all duration-200 group border border-zinc-700 hover:border-orange-500/40 shadow-lg hover:shadow-orange-900/20"
+              >
+                <ClockIcon className="w-7 h-7" />
+                <span className="text-xl font-bold">Timesheets</span>
+              </a>
             </>
           )}
-          {hasAgri && (
-            <AppCard
-              title="Farm Diary"
-              desc="Daily logs & livestock."
-              href="https://farm-diary-one.vercel.app/"
-              icon={<BookIcon />}
-              primary={true}
-            />
-          )}
+          <a
+            href="https://farm-diary-one.vercel.app/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-5 px-8 py-5 rounded-xl text-zinc-200 hover:text-green-400 hover:bg-green-500/10 transition-all duration-200 group border border-zinc-700 hover:border-green-500/40 shadow-lg hover:shadow-green-900/20"
+          >
+            <BookIcon className="w-7 h-7" />
+            <span className="text-xl font-bold">Daily Diary</span>
+          </a>
           {isAdmin && (
-            <AppCard
-              title="Admin Console"
-              desc="Manage users & settings."
+            <button
               onClick={onAdminClick}
-              icon={<ShieldCheckIcon />}
-            />
+              className="flex items-center gap-5 px-8 py-5 rounded-xl text-zinc-200 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 group border border-zinc-700 hover:border-red-500/40 shadow-lg hover:shadow-red-900/20 text-left"
+            >
+              <ShieldCheckIcon className="w-7 h-7" />
+              <span className="text-xl font-bold">Admin</span>
+            </button>
           )}
-          <AppCard
-            title="Sign Out"
-            desc="Log out of your account."
-            onClick={onLogout}
-            icon={<LogoutIcon />}
-          />
-        </div>
-
-        {/* Organizations Section */}
-        <div className="hidden md:block w-full max-w-3xl mt-12">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <span className="w-1 h-6 bg-cyan-500 rounded-full"></span>
-            Your Organizations
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {userOrgs.map((org) => (
-              <div key={org.id} className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 flex items-center justify-between hover:border-zinc-700 transition-colors">
-                <div>
-                  <h3 className="font-bold text-zinc-200">{org.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${org.type === 'agri'
-                        ? 'bg-green-900/20 text-green-400 border-green-900'
-                        : 'bg-cyan-900/20 text-cyan-400 border-cyan-900'
-                      }`}>
-                      {org.type === 'agri' ? 'Agri' : 'Pro'}
-                    </span>
-                    {/* We could show role here if we passed it down, currently userOrgs is just org objects */}
-                  </div>
-                </div>
-                {isAdmin && (
-                  <button onClick={onAdminClick} className="text-xs text-zinc-500 hover:text-white underline">Manage</button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile List */}
-        <div className="md:hidden w-full flex flex-col gap-3 mt-6">
-          {hasPro && (
-            <>
-              <MobileAppRow
-                title="Project Planner"
-                desc="Tasks & Deadlines"
-                href="https://planner.quantra.co.za"
-                icon={<CalendarIcon className="w-5 h-5" />}
-              />
-              <MobileAppRow
-                title="Timesheets"
-                desc="Hours & Travel"
-                href="https://timesheets.quantra.co.za"
-                icon={<ClockIcon className="w-5 h-5" />}
-              />
-            </>
-          )}
-          {hasAgri && (
-            <MobileAppRow
-              title="Farm Diary"
-              desc="Daily Logs"
-              href="https://farm-diary-one.vercel.app/"
-              icon={<BookIcon className="w-5 h-5" />}
-            />
-          )}
-          {isAdmin && (
-            <MobileAppRow
-              title="Admin Console"
-              desc="Users & Settings"
-              onClick={onAdminClick}
-              icon={<ShieldCheckIcon className="w-5 h-5" />}
-            />
-          )}
-          <MobileAppRow
-            title="Sign Out"
-            desc="End Session"
-            onClick={onLogout}
-            icon={<LogoutIcon className="w-5 h-5" />}
-          />
         </div>
       </div>
 
-      <footer className="py-6 text-center text-zinc-700 text-xs">
-        Flogent v1.0 &bull; Secure Workspace
-      </footer>
+      {/* Right Side - Organizations & Departments (Information Only) */}
+      <div className="flex-1 p-8 overflow-y-auto flex justify-end">
+        <div className="w-80">
+          {/* Organizations Section */}
+          <div className="mb-6">
+            <div className="flex flex-col justify-center mb-3">
+              <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Organisations</span>
+            </div>
+            <div className="max-h-[180px] overflow-y-auto space-y-1.5 pr-2">
+              {userOrgs.map(org => (
+                <button
+                  key={org.id}
+                  onClick={() => setSelectedOrgId(org.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center justify-between group text-sm
+                    ${selectedOrgId === org.id
+                      ? 'bg-purple-500/10 border border-purple-500/30'
+                      : 'hover:bg-zinc-800/50 border border-transparent'}`}
+                >
+                  <span className="text-white text-xs">{org.name}</span>
+                  {selectedOrgId === org.id && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_6px_#a855f7]"></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Departments Section */}
+          <div>
+            <div className="flex flex-col justify-center mb-3">
+              <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Departments</span>
+            </div>
+            {currentDepts.length === 0 ? (
+              <div className="text-zinc-600 text-xs italic">No departments found.</div>
+            ) : (
+              <div className="space-y-1.5">
+                {currentDepts.map(dept => (
+                  <div
+                    key={dept.id}
+                    className="px-3 py-2 rounded-lg bg-zinc-800/20 border border-zinc-800/50 text-sm"
+                  >
+                    <span className="text-white text-xs">{dept.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };

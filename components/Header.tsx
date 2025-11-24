@@ -22,13 +22,6 @@ const Header: React.FC<HeaderProps> = ({ userName, email, companyName = "Quantra
             <button onClick={onLogoClick} className="flex items-center gap-2 hover:opacity-90 transition-opacity focus:outline-none">
               <FlogentLogo />
             </button>
-
-            <div className="h-8 w-px bg-zinc-700 hidden sm:block"></div>
-
-            <div className="hidden sm:flex flex-col justify-center">
-              <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">App</span>
-              <span className="text-sm font-bold text-zinc-200">Hub</span>
-            </div>
           </div>
 
           {/* RIGHT: User Profile */}
