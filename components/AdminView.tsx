@@ -4,6 +4,8 @@ import { UsersIcon, ProjectsIcon, BookIcon, OrgIcon, DeptIcon } from './Icons';
 import ManageUsersModal from './modals/ManageUsersModal';
 import ManageProjectsModal from './modals/ManageProjectsModal';
 import EditUserModal from './modals/EditUserModal';
+import ManageOrganizationsModal from './modals/ManageOrganizationsModal';
+import ManageDepartmentsModal from './modals/ManageDepartmentsModal';
 
 const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
     const [activeTab, setActiveTab] = useState<'orgs' | 'depts' | 'users' | 'projects'>('orgs');
@@ -16,7 +18,7 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
     const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 
     // Modals
-    const [activeModal, setActiveModal] = useState<'users' | 'projects' | 'editUser' | 'addOrg' | 'addDept' | null>(null);
+    const [activeModal, setActiveModal] = useState<'users' | 'projects' | 'editUser' | 'orgs' | 'depts' | null>(null);
     const [userToEdit, setUserToEdit] = useState<any>(null);
 
     const fetchData = async () => {
@@ -87,25 +89,45 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
         ? departments.filter(d => d.organization_id === selectedOrgId)
         : [];
 
-    // Handlers (Placeholders for now, will implement logic)
+    // Organization Handlers
     const handleAddOrg = async (name: string, type: 'pro' | 'agri') => {
         const { data, error } = await supabase.from('organizations').insert({ name, type }).select().single();
         if (error) alert("Error adding org: " + error.message);
         else {
-            // Add creator as admin
             await supabase.from('organization_members').insert({ organization_id: data.id, user_id: currentUser.id, role: 'admin' });
             fetchData();
-            setActiveModal(null);
         }
     };
 
+    const handleUpdateOrg = async (id: string, name: string, type: 'pro' | 'agri') => {
+        const { error } = await supabase.from('organizations').update({ name, type }).eq('id', id);
+        if (error) alert("Error updating org: " + error.message);
+        else fetchData();
+    };
+
+    const handleDeleteOrg = async (id: string) => {
+        const { error } = await supabase.from('organizations').delete().eq('id', id);
+        if (error) alert("Error deleting org: " + error.message);
+        else fetchData();
+    };
+
+    // Department Handlers
     const handleAddDept = async (name: string, orgId: string) => {
         const { error } = await supabase.from('departments').insert({ name, organization_id: orgId });
         if (error) alert("Error adding dept: " + error.message);
-        else {
-            fetchData();
-            setActiveModal(null);
-        }
+        else fetchData();
+    };
+
+    const handleUpdateDept = async (id: string, name: string, orgId: string) => {
+        const { error } = await supabase.from('departments').update({ name, organization_id: orgId }).eq('id', id);
+        if (error) alert("Error updating dept: " + error.message);
+        else fetchData();
+    };
+
+    const handleDeleteDept = async (id: string) => {
+        const { error } = await supabase.from('departments').delete().eq('id', id);
+        if (error) alert("Error deleting dept: " + error.message);
+        else fetchData();
     };
 
     return (
@@ -169,10 +191,10 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Organisations</span>
                                 <button
-                                    onClick={() => setActiveModal('addOrg')}
+                                    onClick={() => setActiveModal('orgs')}
                                     className="text-xs text-purple-400 hover:text-purple-300 font-bold uppercase tracking-wider"
                                 >
-                                    + Add
+                                    Manage
                                 </button>
                             </div>
                             <div className="max-h-[400px] overflow-y-auto space-y-1.5 pr-2">
@@ -220,14 +242,12 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Departments</span>
-                                    {selectedOrgId && (
-                                        <button
-                                            onClick={() => setActiveModal('addDept')}
-                                            className="text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider"
-                                        >
-                                            + Add
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={() => setActiveModal('depts')}
+                                        className="text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider"
+                                    >
+                                        Manage
+                                    </button>
                                 </div>
                                 {currentDepts.length === 0 ? (
                                     <div className="text-zinc-600 text-xs italic">No departments found.</div>
@@ -303,6 +323,26 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
             </div>
 
             {/* MODALS */}
+            {activeModal === 'orgs' && (
+                <ManageOrganizationsModal
+                    organizations={userOrgs}
+                    onClose={() => setActiveModal(null)}
+                    onAddOrganization={handleAddOrg}
+                    onUpdateOrganization={handleUpdateOrg}
+                    onDeleteOrganization={handleDeleteOrg}
+                />
+            )}
+            {activeModal === 'depts' && (
+                <ManageDepartmentsModal
+                    departments={departments}
+                    organizations={userOrgs}
+                    selectedOrgId={selectedOrgId}
+                    onClose={() => setActiveModal(null)}
+                    onAddDepartment={handleAddDept}
+                    onUpdateDepartment={handleUpdateDept}
+                    onDeleteDepartment={handleDeleteDept}
+                />
+            )}
             {activeModal === 'users' && (
                 <ManageUsersModal
                     users={users}
@@ -334,81 +374,6 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                     onSave={async (u) => { await supabase.from('users').update({ name: u.name, email: u.email, is_admin: u.is_admin }).eq('id', u.id); fetchData(); setActiveModal('users'); }}
                     currentUser={currentUser}
                 />
-            )}
-
-            {/* Add Org Modal */}
-            {activeModal === 'addOrg' && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 w-full max-w-md">
-                        <h3 className="text-xl font-bold text-white mb-6">Add Organisation</h3>
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            handleAddOrg(formData.get('name') as string, formData.get('type') as 'pro' | 'agri');
-                        }}>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">Name</label>
-                                    <input name="name" required className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500" placeholder="Organization Name" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">Type</label>
-                                    <div className="flex gap-4">
-                                        <label className="flex items-center gap-2 text-zinc-300 cursor-pointer">
-                                            <input type="radio" name="type" value="pro" defaultChecked className="accent-purple-500" />
-                                            Professional
-                                        </label>
-                                        <label className="flex items-center gap-2 text-zinc-300 cursor-pointer">
-                                            <input type="radio" name="type" value="agri" className="accent-purple-500" />
-                                            Agriculture
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-3 mt-8">
-                                <button type="button" onClick={() => setActiveModal(null)} className="px-4 py-2 text-zinc-400 hover:text-white">Cancel</button>
-                                <button type="submit" className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold">Create</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Add Dept Modal */}
-            {activeModal === 'addDept' && selectedOrgId && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 w-full max-w-md">
-                        <h3 className="text-xl font-bold text-white mb-6">Add Department</h3>
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            handleAddDept(formData.get('name') as string, formData.get('orgId') as string);
-                        }}>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">Organization</label>
-                                    <select
-                                        name="orgId"
-                                        defaultValue={selectedOrgId}
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                                    >
-                                        {userOrgs.map(org => (
-                                            <option key={org.id} value={org.id}>{org.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">Department Name</label>
-                                    <input name="name" required className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500" placeholder="e.g. Engineering" />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-3 mt-8">
-                                <button type="button" onClick={() => setActiveModal(null)} className="px-4 py-2 text-zinc-400 hover:text-white">Cancel</button>
-                                <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold">Create</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
             )}
         </div>
     );
