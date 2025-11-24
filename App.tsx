@@ -30,11 +30,9 @@ const App: React.FC = () => {
   const fetchUserData = async (userId: string) => {
     setIsLoading(true);
     try {
-      // 1. Fetch Profile
       const { data: profile } = await supabase.from('users').select('*').eq('id', userId).single();
       if (profile) setUserProfile(profile);
 
-      // 2. Fetch Organizations
       const { data: orgMembers } = await supabase
         .from('organization_members')
         .select('organization_id, organizations(*)')
@@ -43,15 +41,12 @@ const App: React.FC = () => {
       const orgs = orgMembers?.map((m: any) => m.organizations) || [];
       setUserOrgs(orgs);
 
-      // 3. Fetch Departments
       const { data: depts } = await supabase.from('departments').select('*');
       setDepartments(depts || []);
 
-      // 4. Fetch Projects
       const { data: projs } = await supabase.from('projects').select('*').order('sorting', { ascending: true });
       setProjects(projs || []);
 
-      // 5. Determine View
       if (orgs.length === 0) {
         setCurrentView('onboarding');
       } else {
@@ -150,7 +145,11 @@ const App: React.FC = () => {
       />
 
       {currentView === 'admin' && userProfile?.is_admin ? (
-        <AdminView currentUser={userProfile} />
+        <AdminView
+          currentUser={userProfile}
+          isDrawerOpen={isDrawerOpen}
+          onCloseDrawer={() => setIsDrawerOpen(false)}
+        />
       ) : (
         <Hub
           companyName="Quantra"

@@ -6,9 +6,11 @@ import ManageProjectsModal from './modals/ManageProjectsModal';
 import EditUserModal from './modals/EditUserModal';
 import ManageOrganizationsModal from './modals/ManageOrganizationsModal';
 import ManageDepartmentsModal from './modals/ManageDepartmentsModal';
+import OrgDeptDrawer from './OrgDeptDrawer';
 
-const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
+const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDrawer: () => void }> = ({ currentUser, isDrawerOpen, onCloseDrawer }) => {
     const [activeTab, setActiveTab] = useState<'orgs' | 'depts' | 'users' | 'projects'>('orgs');
+    const [mobileView, setMobileView] = useState<'menu' | 'content'>('menu'); // New state for mobile navigation
     const [users, setUsers] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
     const [userOrgs, setUserOrgs] = useState<any[]>([]);
@@ -130,10 +132,15 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
         else fetchData();
     };
 
+    const handleMobileNavClick = (tab: 'orgs' | 'depts' | 'users' | 'projects') => {
+        setActiveTab(tab);
+        setMobileView('content');
+    };
+
     return (
         <div className="h-[calc(100vh-64px)] flex bg-[#121212]">
-            {/* Left Sidebar - Admin Navigation */}
-            <div className="w-96 border-r border-zinc-800 flex flex-col bg-zinc-900/30 p-8">
+            {/* Left Sidebar - Admin Navigation (Desktop) */}
+            <div className="hidden md:flex w-96 border-r border-zinc-800 flex-col bg-zinc-900/30 p-8">
                 <div className="flex flex-col gap-5">
                     <button
                         onClick={() => setActiveTab('orgs')}
@@ -182,8 +189,56 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
             </div>
 
             {/* Right Content Area */}
-            <div className="flex-1 p-8 overflow-y-auto flex justify-end">
-                <div className="w-80">
+            <div className="flex-1 p-4 md:p-8 overflow-y-auto flex flex-col md:items-end">
+
+                {/* Mobile Navigation Buttons (Only visible when mobileView is 'menu') */}
+                <div className={`md:hidden w-full grid grid-cols-1 gap-3 mb-8 ${mobileView === 'content' ? 'hidden' : ''}`}>
+                    <button
+                        onClick={() => handleMobileNavClick('orgs')}
+                        className="flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 border shadow-lg text-left border-zinc-700 text-zinc-200 bg-zinc-900/50"
+                    >
+                        <OrgIcon className="w-6 h-6" />
+                        <span className="text-lg font-bold">Organisations</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleMobileNavClick('depts')}
+                        className="flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 border shadow-lg text-left border-zinc-700 text-zinc-200 bg-zinc-900/50"
+                    >
+                        <DeptIcon className="w-6 h-6" />
+                        <span className="text-lg font-bold">Departments</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleMobileNavClick('users')}
+                        className="flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 border shadow-lg text-left border-zinc-700 text-zinc-200 bg-zinc-900/50"
+                    >
+                        <UsersIcon className="w-6 h-6" />
+                        <span className="text-lg font-bold">Users</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleMobileNavClick('projects')}
+                        className="flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 border shadow-lg text-left border-zinc-700 text-zinc-200 bg-zinc-900/50"
+                    >
+                        <ProjectsIcon className="w-6 h-6" />
+                        <span className="text-lg font-bold">Projects</span>
+                    </button>
+                </div>
+
+                {/* Content Container (Hidden on mobile unless mobileView is 'content') */}
+                <div className={`w-full md:w-80 ${mobileView === 'menu' ? 'hidden md:block' : ''}`}>
+
+                    {/* Mobile Back Button */}
+                    <div className="md:hidden mb-4">
+                        <button
+                            onClick={() => setMobileView('menu')}
+                            className="flex items-center gap-2 text-zinc-400 hover:text-white"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                            <span className="text-sm font-bold">Back to Menu</span>
+                        </button>
+                    </div>
 
                     {/* ORGANISATIONS TAB */}
                     {activeTab === 'orgs' && (
@@ -375,6 +430,16 @@ const AdminView: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                     currentUser={currentUser}
                 />
             )}
+
+            {/* Mobile Navigation Drawer */}
+            <OrgDeptDrawer
+                isOpen={isDrawerOpen}
+                onClose={onCloseDrawer}
+                organizations={userOrgs}
+                departments={departments}
+                selectedOrgId={selectedOrgId}
+                onSelectOrg={(id) => { setSelectedOrgId(id); }}
+            />
         </div>
     );
 };

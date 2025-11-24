@@ -132,6 +132,7 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout,
       </div>
 
       {/* Mobile Drawer */}
+
       <OrgDeptDrawer
         isOpen={isDrawerOpen}
         onClose={onCloseDrawer}
@@ -140,7 +141,6 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout,
         selectedOrgId={selectedOrgId}
         onSelectOrg={(orgId) => {
           setSelectedOrgId(orgId);
-          onCloseDrawer();
         }}
       />
 
