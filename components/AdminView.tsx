@@ -414,12 +414,69 @@ const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDraw
                     organizations={userOrgs}
                     selectedOrgId={selectedOrgId}
                     onClose={() => setActiveModal(null)}
-                    onRemoveItem={async (id) => { await supabase.from('projects').delete().eq('id', id); fetchData(); }}
+                    onRemoveItem={async (id) => { await supabase.from('departments').delete().eq('id', id); fetchData(); }}
                     onReorderItem={async () => { }}
+                    onUpdateItemName={async (id, name) => { await supabase.from('departments').update({ name }).eq('id', id); fetchData(); }}
+                    tasks={[]} completedTasks={[]}
+                />
+            )}
+
+            {activeModal === 'users' && (
+                <ManageUsersModal
+                    users={users}
+                    onClose={() => setActiveModal(null)}
+                    onApproveUser={async (id) => { await supabase.from('users').update({ status: 'approved' }).eq('id', id); fetchData(); }}
+                    onEditUser={(user) => { setUserToEdit(user); setActiveModal('editUser'); }}
+                    onDeleteUser={async (id) => { await supabase.from('users').delete().eq('id', id); fetchData(); }}
+                    onAddMember={async (email, orgId, deptId) => {
+                        const { data: foundUsers } = await supabase.from('users').select('id').eq('email', email);
+                        if (foundUsers && foundUsers.length > 0) {
+                            const userId = foundUsers[0].id;
+                            await supabase.from('organization_members').insert({ organization_id: orgId, user_id: userId, role: 'member' });
+                            if (deptId) {
+                                await supabase.from('department_members').insert({ department_id: deptId, user_id: userId, role: 'member' });
+                            }
+                            fetchData();
+                        } else {
+                            alert("User not found. Invite functionality coming soon.");
+                        }
+                    }}
+                    currentUser={currentUser}
+                    organizations={userOrgs}
+                    departments={departments}
+                    deptMembers={deptMembers}
+                    onAssignDept={async (userId, deptId) => {
+                        await supabase.from('department_members').insert({ user_id: userId, department_id: deptId, role: 'member' });
+                        fetchData();
+                    }}
+                    onRemoveDept={async (userId, deptId) => {
+                        await supabase.from('department_members').delete().match({ user_id: userId, department_id: deptId });
+                        fetchData();
+                    }}
+                    tasks={[]}
+                />
+            )}
+
+            {activeModal === 'projects' && (
+                <ManageProjectsModal
+                    items={filteredProjects}
+                    onClose={() => setActiveModal(null)}
+                    onAddItem={async (name) => {
+                        await supabase.from('projects').insert({
+                            name,
+                            organization_id: selectedOrgId,
+                            department_id: selectedDeptId,
+                            sorting: projects.length
+                        });
+                        fetchData();
+                    }}
+                    onRemoveItem={async (id) => { await supabase.from('projects').delete().eq('id', id); fetchData(); }}
+                    onReorderItem={async (id, direction) => { console.log("Reorder", id, direction); }}
                     onUpdateItemName={async (id, name) => { await supabase.from('projects').update({ name }).eq('id', id); fetchData(); }}
                     tasks={[]} completedTasks={[]}
                 />
             )}
+
             {activeModal === 'editUser' && userToEdit && (
                 <EditUserModal
                     user={userToEdit}

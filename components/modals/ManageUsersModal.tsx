@@ -15,10 +15,10 @@ interface ManageUsersModalProps {
   tasks: any[];
   currentUser: User;
   organizations: Organization[];
-  departments?: Department[]; // Added departments prop
-  deptMembers?: any[]; // Added deptMembers prop
-  onAssignDept?: (userId: string, deptId: string) => void; // Added handler
-  onRemoveDept?: (userId: string, deptId: string) => void; // Added handler
+  departments?: Department[];
+  deptMembers?: any[];
+  onAssignDept?: (userId: string, deptId: string) => void;
+  onRemoveDept?: (userId: string, deptId: string) => void;
 }
 
 // ICONS
@@ -27,9 +27,6 @@ const XIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 const EditIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="overflow-visible" {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
-);
-const TrashIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="overflow-visible" {...props}><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
 );
 const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="overflow-visible" {...props}><path d="M5 12h14" /><path d="M12 5v14" /></svg>
@@ -204,23 +201,12 @@ const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onA
                                 <EditIcon className="w-4 h-4" />
                               </button>
                             </Tooltip>
-
-                            {!isCurrentUser && (
-                              <Tooltip text="Remove User">
-                                <button
-                                  onClick={() => onDeleteUser(user.id)}
-                                  className="text-zinc-400 hover:text-red-400 p-2 rounded-lg hover:bg-red-900/10 transition-colors"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                </button>
-                              </Tooltip>
-                            )}
                           </>
                         )}
                       </div>
                     </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
