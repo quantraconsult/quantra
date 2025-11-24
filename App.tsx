@@ -5,15 +5,27 @@ import AdminView from './components/AdminView';
 import Onboarding from './components/Onboarding';
 import { supabase } from './lib/supabaseClient';
 import AuthPage from './components/AuthPage';
+import type { Session } from '@supabase/supabase-js';
+import type { Organization, Department, Project } from './types';
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  is_admin: boolean;
+  status: string;
+}
 
 const App: React.FC = () => {
-  const [session, setSession] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [userOrgs, setUserOrgs] = useState<any[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userOrgs, setUserOrgs] = useState<Organization[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [session, setSession] = useState<Session | null>(null);
   const [currentView, setCurrentView] = useState<'hub' | 'admin' | 'onboarding'>('hub');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 
   const fetchUserData = async (userId: string) => {
     setIsLoading(true);
@@ -65,7 +77,7 @@ const App: React.FC = () => {
       else {
         setUserProfile(null);
         setUserOrgs([]);
-        setCurrentView('hub'); // Reset to default, though AuthPage will show
+        setCurrentView('hub');
       }
     });
 
@@ -87,17 +99,15 @@ const App: React.FC = () => {
     if (error) return { success: false, message: error.message };
 
     if (data.user) {
-      // Manually insert into public.users to ensure profile exists
       const { error: profileError } = await supabase.from('users').insert({
         id: data.user.id,
         name: name,
         email: email,
-        status: 'approved', // Auto-approve new registrations
+        status: 'approved',
         is_admin: false
-      } as any); // Type assertion to bypass strict typing issues for now
+      } as any);
       if (profileError) {
         console.error("Error creating user profile:", profileError);
-        // Don't fail the whole registration, but log it. 
       }
     }
 
@@ -125,6 +135,8 @@ const App: React.FC = () => {
     return <Onboarding userId={session.user.id} onComplete={handleOnboardingComplete} />;
   }
 
+  const currentOrgName = userOrgs.find(org => org.id === selectedOrgId)?.name;
+
   return (
     <div className="bg-[#121212] min-h-screen text-gray-200 antialiased selection:bg-cyan-500/30">
       <Header
@@ -133,6 +145,8 @@ const App: React.FC = () => {
         isAdmin={userProfile?.is_admin}
         onLogout={handleLogout}
         onLogoClick={() => setCurrentView('hub')}
+        currentOrgName={currentOrgName}
+        onMenuClick={() => setIsDrawerOpen(true)}
       />
 
       {currentView === 'admin' && userProfile?.is_admin ? (
@@ -146,6 +160,8 @@ const App: React.FC = () => {
           userOrgs={userOrgs}
           departments={departments}
           projects={projects}
+          isDrawerOpen={isDrawerOpen}
+          onCloseDrawer={() => setIsDrawerOpen(false)}
         />
       )}
     </div>

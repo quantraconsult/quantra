@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarIcon, ClockIcon, ShieldCheckIcon, BookIcon } from './Icons';
 import { Organization, Department, Project } from '../types';
+import OrgDeptDrawer from './OrgDeptDrawer';
 
 interface HubProps {
   companyName: string;
@@ -10,9 +11,11 @@ interface HubProps {
   userOrgs: Organization[];
   departments: Department[];
   projects: Project[];
+  isDrawerOpen: boolean;
+  onCloseDrawer: () => void;
 }
 
-const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout, userOrgs, departments, projects }) => {
+const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout, userOrgs, departments, projects, isDrawerOpen, onCloseDrawer }) => {
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 
   // Auto-select first org
@@ -33,7 +36,7 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout,
     <div className="h-[calc(100vh-64px)] flex bg-[#121212]">
 
       {/* Left Sidebar - App Links */}
-      <div className="w-96 border-r border-zinc-800 flex flex-col bg-zinc-900/30 p-8">
+      <div className="w-full md:w-96 border-r border-zinc-800 flex flex-col bg-zinc-900/30 p-4 md:p-8">
         <div className="flex flex-col gap-5">
           {hasPro && (
             <>
@@ -78,8 +81,8 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout,
         </div>
       </div>
 
-      {/* Right Side - Organizations & Departments (Information Only) */}
-      <div className="flex-1 p-8 overflow-y-auto flex justify-end">
+      {/* Right Side - Organizations & Departments (Desktop Only) */}
+      <div className="hidden md:flex flex-1 p-8 overflow-y-auto justify-end">
         <div className="w-80">
           {/* Organizations Section */}
           <div className="mb-6">
@@ -127,6 +130,19 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout,
           </div>
         </div>
       </div>
+
+      {/* Mobile Drawer */}
+      <OrgDeptDrawer
+        isOpen={isDrawerOpen}
+        onClose={onCloseDrawer}
+        organizations={userOrgs}
+        departments={departments}
+        selectedOrgId={selectedOrgId}
+        onSelectOrg={(orgId) => {
+          setSelectedOrgId(orgId);
+          onCloseDrawer();
+        }}
+      />
 
     </div>
   );
