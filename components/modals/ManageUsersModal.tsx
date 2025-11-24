@@ -3,6 +3,7 @@ import Tooltip from '../Tooltip';
 
 interface User { id: string; name: string; email: string; status: 'pending' | 'approved'; is_admin: boolean; }
 interface Organization { id: string; name: string; type?: 'pro' | 'agri'; }
+interface Department { id: string; name: string; organization_id: string; }
 
 interface ManageUsersModalProps {
   users: User[];
@@ -10,10 +11,14 @@ interface ManageUsersModalProps {
   onApproveUser: (userId: string) => void;
   onEditUser: (user: User) => void;
   onDeleteUser: (userId: string) => void;
-  onAddMember: (email: string, organizationId: string) => void;
+  onAddMember: (email: string, organizationId: string, departmentId?: string) => void;
   tasks: any[];
   currentUser: User;
   organizations: Organization[];
+  departments?: Department[]; // Added departments prop
+  deptMembers?: any[]; // Added deptMembers prop
+  onAssignDept?: (userId: string, deptId: string) => void; // Added handler
+  onRemoveDept?: (userId: string, deptId: string) => void; // Added handler
 }
 
 // ICONS
@@ -30,19 +35,23 @@ const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="overflow-visible" {...props}><path d="M5 12h14" /><path d="M12 5v14" /></svg>
 );
 
-const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onApproveUser, onEditUser, onDeleteUser, onAddMember, currentUser, organizations }) => {
+const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onApproveUser, onEditUser, onDeleteUser, onAddMember, currentUser, organizations, departments = [], deptMembers = [], onAssignDept, onRemoveDept }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [selectedOrgId, setSelectedOrgId] = useState<string>(organizations[0]?.id || '');
+  const [selectedDeptId, setSelectedDeptId] = useState<string>('');
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMemberEmail.trim() && selectedOrgId) {
-      onAddMember(newMemberEmail.trim(), selectedOrgId);
+      onAddMember(newMemberEmail.trim(), selectedOrgId, selectedDeptId || undefined);
       setNewMemberEmail('');
       setIsAdding(false);
     }
   };
+
+  const getOrgDepts = (orgId: string) => departments.filter(d => d.organization_id === orgId);
+  const getUserDepts = (userId: string) => deptMembers.filter(dm => dm.user_id === userId).map(dm => departments.find(d => d.id === dm.department_id)).filter(Boolean);
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
@@ -79,16 +88,29 @@ const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onA
                   required
                 />
               </div>
-              <div className="w-full sm:w-1/3">
+              <div className="w-full sm:w-1/4">
                 <label className="block text-xs text-zinc-500 mb-1 font-medium uppercase tracking-wider">Organization</label>
                 <select
                   value={selectedOrgId}
-                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                  onChange={(e) => { setSelectedOrgId(e.target.value); setSelectedDeptId(''); }}
                   className="w-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm rounded-lg focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 p-2.5"
                   required
                 >
                   {organizations.map(org => (
                     <option key={org.id} value={org.id}>{org.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-full sm:w-1/4">
+                <label className="block text-xs text-zinc-500 mb-1 font-medium uppercase tracking-wider">Department (Optional)</label>
+                <select
+                  value={selectedDeptId}
+                  onChange={(e) => setSelectedDeptId(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm rounded-lg focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 p-2.5"
+                >
+                  <option value="">None</option>
+                  {getOrgDepts(selectedOrgId).map(dept => (
+                    <option key={dept.id} value={dept.id}>{dept.name}</option>
                   ))}
                 </select>
               </div>
@@ -117,6 +139,7 @@ const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onA
               <tr>
                 <th scope="col" className="px-6 py-4 font-bold">Name</th>
                 <th scope="col" className="px-6 py-4 font-bold">Email</th>
+                <th scope="col" className="px-6 py-4 font-bold">Departments</th>
                 <th scope="col" className="px-6 py-4 font-bold">Status</th>
                 <th scope="col" className="px-6 py-4 font-bold text-right">Actions</th>
               </tr>
@@ -124,6 +147,7 @@ const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onA
             <tbody className="divide-y divide-zinc-800">
               {users.map(user => {
                 const isCurrentUser = currentUser.id === user.id;
+                const userDepts = getUserDepts(user.id);
 
                 return (
                   <tr key={user.id} className="hover:bg-zinc-800/30 transition-colors">
@@ -132,6 +156,29 @@ const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ users, onClose, onA
                       {user.is_admin && <span className="ml-2 text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20 font-bold uppercase">Admin</span>}
                     </td>
                     <td className="px-6 py-4">{user.email}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {userDepts.length > 0 ? userDepts.map((d: any) => (
+                          <span key={d.id} className="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded flex items-center gap-1">
+                            {d.name}
+                            {onRemoveDept && (
+                              <button onClick={() => onRemoveDept(user.id, d.id)} className="hover:text-red-400 ml-1">×</button>
+                            )}
+                          </span>
+                        )) : <span className="text-zinc-600 italic text-xs">No Dept</span>}
+                        {onAssignDept && (
+                          <select
+                            className="text-xs bg-zinc-900 border border-zinc-800 rounded px-1 py-0.5 text-zinc-500 hover:text-zinc-300 focus:text-zinc-200 w-4"
+                            onChange={(e) => { if (e.target.value) onAssignDept(user.id, e.target.value); e.target.value = ''; }}
+                          >
+                            <option value="">+</option>
+                            {departments.filter(d => !userDepts.some((ud: any) => ud.id === d.id)).map(d => (
+                              <option key={d.id} value={d.id}>{d.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs font-bold uppercase tracking-wider rounded-full ${user.status === 'approved' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                         }`}>
