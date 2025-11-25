@@ -16,6 +16,7 @@ const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDraw
     const [userOrgs, setUserOrgs] = useState<any[]>([]);
     const [departments, setDepartments] = useState<any[]>([]);
     const [deptMembers, setDeptMembers] = useState<any[]>([]); // New state for department members
+    const [orgMembers, setOrgMembers] = useState<any[]>([]); // New state for organization members
 
     // Selection states
     const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
@@ -85,6 +86,10 @@ const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDraw
             const { data: dm } = await supabase.from('department_members').select('*');
             setDeptMembers(dm || []);
 
+            // 6. Fetch Organization Members (New)
+            const { data: om } = await supabase.from('organization_members').select('*');
+            setOrgMembers(om || []);
+
         } catch (error) {
             console.error("Error fetching admin data:", error);
         }
@@ -105,40 +110,30 @@ const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDraw
     });
 
     const filteredUsers = users.filter(u => {
-        // 1. Must be in selected Org (via organization_members check done in fetch, but double check logic if needed)
-        // For now, users list is already filtered to user's orgs.
-        // We need to check if they are in the selected Org specifically if we had that link readily available in 'users' state.
-        // But 'users' state is flat list of all users in my orgs.
-        // We need to filter by selectedOrgId.
-        // The 'users' array doesn't have org_id directly. We need to check organization_members or trust the fetch logic.
-        // Wait, fetch logic gets ALL users from ALL my orgs.
-        // To filter by selectedOrgId, we need to know which users are in selectedOrgId.
-        // We can re-fetch or store that mapping.
-        // For simplicity, let's assume we want to filter by Department if selected.
+        if (selectedOrgId) {
+            const isInOrg = orgMembers.some(om => om.user_id === u.id && om.organization_id === selectedOrgId);
+            if (!isInOrg) return false;
+        }
 
         if (selectedDeptId) {
             return deptMembers.some(dm => dm.user_id === u.id && dm.department_id === selectedDeptId);
         }
-        // If only Org selected, we ideally show all users in that Org.
-        // Current 'users' state has all users from ALL my orgs.
-        // We need a way to filter 'users' by 'selectedOrgId'.
-        // Let's assume for now we show all, or we need to fetch org members for the selected org.
         return true;
     });
 
 
     // Organization Handlers
     const handleAddOrg = async (name: string, type: 'pro' | 'agri') => {
-        const { data, error } = await supabase.from('organizations').insert({ name, type }).select().single();
+        const { data, error } = await supabase.from('organizations').insert({ name, type } as any).select().single();
         if (error) alert("Error adding org: " + error.message);
         else {
-            await supabase.from('organization_members').insert({ organization_id: data.id, user_id: currentUser.id, role: 'admin' });
+            await supabase.from('organization_members').insert({ organization_id: data.id, user_id: currentUser.id, role: 'admin' } as any);
             fetchData();
         }
     };
 
     const handleUpdateOrg = async (id: string, name: string, type: 'pro' | 'agri') => {
-        const { error } = await supabase.from('organizations').update({ name, type }).eq('id', id);
+        const { error } = await supabase.from('organizations').update({ name, type } as any).eq('id', id);
         if (error) alert("Error updating org: " + error.message);
         else fetchData();
     };
@@ -151,13 +146,13 @@ const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDraw
 
     // Department Handlers
     const handleAddDept = async (name: string, orgId: string) => {
-        const { error } = await supabase.from('departments').insert({ name, organization_id: orgId });
+        const { error } = await supabase.from('departments').insert({ name, organization_id: orgId } as any);
         if (error) alert("Error adding dept: " + error.message);
         else fetchData();
     };
 
     const handleUpdateDept = async (id: string, name: string, orgId: string) => {
-        const { error } = await supabase.from('departments').update({ name, organization_id: orgId }).eq('id', id);
+        const { error } = await supabase.from('departments').update({ name, organization_id: orgId } as any).eq('id', id);
         if (error) alert("Error updating dept: " + error.message);
         else fetchData();
     };
@@ -165,6 +160,32 @@ const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDraw
     const handleDeleteDept = async (id: string) => {
         const { error } = await supabase.from('departments').delete().eq('id', id);
         if (error) alert("Error deleting dept: " + error.message);
+        else fetchData();
+    };
+
+    // User-Org Assignment Handlers
+    const handleAssignOrg = async (userId: string, orgId: string) => {
+        const { error } = await supabase.from('organization_members').insert({ user_id: userId, organization_id: orgId, role: 'member' } as any);
+        if (error) alert("Error assigning user to organization: " + error.message);
+        else fetchData();
+    };
+
+    const handleRemoveOrg = async (userId: string, orgId: string) => {
+        const { error } = await supabase.from('organization_members').delete().match({ user_id: userId, organization_id: orgId } as any);
+        if (error) alert("Error removing user from organization: " + error.message);
+        else fetchData();
+    };
+
+    // User-Dept Assignment Handlers
+    const handleAssignDept = async (userId: string, deptId: string) => {
+        const { error } = await supabase.from('department_members').insert({ user_id: userId, department_id: deptId, role: 'member' } as any);
+        if (error) alert("Error assigning user to department: " + error.message);
+        else fetchData();
+    };
+
+    const handleRemoveDept = async (userId: string, deptId: string) => {
+        const { error } = await supabase.from('department_members').delete().match({ user_id: userId, department_id: deptId } as any);
+        if (error) alert("Error removing user from department: " + error.message);
         else fetchData();
     };
 
@@ -301,15 +322,29 @@ const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDraw
                         <div className="max-w-3xl">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-white">Organisations</h2>
-                                <button onClick={() => setActiveModal('orgs')} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors">
-                                    Manage
+                                <button
+                                    onClick={() => setActiveModal('orgs')}
+                                    className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                                >
+                                    + Add Org
                                 </button>
                             </div>
-                            <div className="grid gap-3">
+                            <div className="grid grid-cols-1 gap-4">
                                 {userOrgs.map(org => (
-                                    <div key={org.id} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 flex items-center justify-between">
-                                        <span className="text-zinc-200 font-medium">{org.name}</span>
-                                        <span className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-400 uppercase">{org.type || 'pro'}</span>
+                                    <div key={org.id} className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl flex justify-between items-center group hover:border-purple-500/50 transition-all">
+                                        <div>
+                                            <h3 className="font-bold text-lg text-zinc-200">{org.name}</h3>
+                                            <span className="text-xs uppercase tracking-wider text-zinc-500 font-bold">{org.type}</span>
+                                        </div>
+                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => {
+                                                const newName = prompt("New name:", org.name);
+                                                if (newName) handleUpdateOrg(org.id, newName, org.type);
+                                            }} className="text-zinc-400 hover:text-white p-2">Edit</button>
+                                            <button onClick={() => {
+                                                if (confirm("Delete org?")) handleDeleteOrg(org.id);
+                                            }} className="text-zinc-400 hover:text-red-400 p-2">Delete</button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -321,180 +356,211 @@ const AdminView: React.FC<{ currentUser: any; isDrawerOpen: boolean; onCloseDraw
                         <div className="max-w-3xl">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-white">Departments</h2>
-                                <button onClick={() => setActiveModal('depts')} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
-                                    Manage
+                                <button
+                                    onClick={() => setActiveModal('depts')}
+                                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                                >
+                                    + Add Dept
                                 </button>
                             </div>
-                            {/* Org Selector for Depts Tab */}
-                            <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-                                {userOrgs.map(org => (
-                                    <button
-                                        key={org.id}
-                                        onClick={() => setSelectedOrgId(org.id)}
-                                        className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors
-                                            ${selectedOrgId === org.id ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200'}`}
-                                    >
-                                        {org.name}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="grid gap-3">
-                                {currentDepts.length === 0 ? (
-                                    <div className="text-zinc-500 italic">No departments found for this organization.</div>
-                                ) : (
-                                    currentDepts.map(dept => (
-                                        <div key={dept.id} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-                                            <span className="text-zinc-200 font-medium">{dept.name}</span>
+                            <div className="grid grid-cols-1 gap-4">
+                                {departments.map(dept => {
+                                    const orgName = userOrgs.find(o => o.id === dept.organization_id)?.name || 'Unknown Org';
+                                    return (
+                                        <div key={dept.id} className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl flex justify-between items-center group hover:border-blue-500/50 transition-all">
+                                            <div>
+                                                <h3 className="font-bold text-lg text-zinc-200">{dept.name}</h3>
+                                                <span className="text-xs text-zinc-500">{orgName}</span>
+                                            </div>
+                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => {
+                                                    const newName = prompt("New name:", dept.name);
+                                                    if (newName) handleUpdateDept(dept.id, newName, dept.organization_id);
+                                                }} className="text-zinc-400 hover:text-white p-2">Edit</button>
+                                                <button onClick={() => {
+                                                    if (confirm("Delete dept?")) handleDeleteDept(dept.id);
+                                                }} className="text-zinc-400 hover:text-red-400 p-2">Delete</button>
+                                            </div>
                                         </div>
-                                    ))
-                                )}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
 
                     {/* USERS TAB */}
                     {activeTab === 'users' && (
-                        <div className="max-w-3xl">
+                        <div>
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-white">Users</h2>
-                                <button onClick={() => setActiveModal('users')} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors">
-                                    Manage
+                                <button
+                                    onClick={() => setActiveModal('users')}
+                                    className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                                >
+                                    Manage Users
                                 </button>
                             </div>
-                            <div className="grid gap-3">
-                                {filteredUsers.map(user => (
-                                    <div key={user.id} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 flex items-center justify-between">
-                                        <div>
-                                            <div className="text-zinc-200 font-medium">{user.name}</div>
-                                            <div className="text-zinc-500 text-sm">{user.email}</div>
-                                        </div>
-                                        <span className={`text-xs px-2 py-1 rounded ${user.status === 'approved' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
-                                            {user.status}
-                                        </span>
-                                    </div>
-                                ))}
+                            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+                                <table className="w-full text-left text-sm text-zinc-400">
+                                    <thead className="bg-zinc-900 text-xs uppercase font-bold text-zinc-500">
+                                        <tr>
+                                            <th className="px-6 py-4">Name</th>
+                                            <th className="px-6 py-4">Email</th>
+                                            <th className="px-6 py-4">Status</th>
+                                            <th className="px-6 py-4 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-zinc-800">
+                                        {filteredUsers.map(user => (
+                                            <tr key={user.id} className="hover:bg-zinc-800/50 transition-colors">
+                                                <td className="px-6 py-4 font-medium text-zinc-200">{user.name}</td>
+                                                <td className="px-6 py-4">{user.email}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${user.status === 'approved' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                                                        {user.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => { setUserToEdit(user); setActiveModal('editUser'); }}
+                                                        className="text-zinc-400 hover:text-cyan-400 transition-colors"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {filteredUsers.length === 0 && (
+                                    <div className="p-8 text-center text-zinc-500 italic">No users found in this selection.</div>
+                                )}
                             </div>
                         </div>
                     )}
 
                     {/* PROJECTS TAB */}
                     {activeTab === 'projects' && (
-                        <div className="max-w-3xl">
+                        <div>
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-bold text-white">Projects</h2>
-                                <button onClick={() => setActiveModal('projects')} className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors">
-                                    Manage
+                                <button
+                                    onClick={() => setActiveModal('projects')}
+                                    className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                                >
+                                    Manage Projects
                                 </button>
                             </div>
-                            <div className="grid gap-3">
-                                {filteredProjects.map(proj => (
-                                    <div key={proj.id} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-                                        <span className="text-zinc-200 font-medium">{proj.name}</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {filteredProjects.map(project => (
+                                    <div key={project.id} className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl hover:border-orange-500/50 transition-all">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-bold text-zinc-200">{project.name}</h3>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${project.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-zinc-800 text-zinc-500'}`}>
+                                                {project.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-zinc-500 line-clamp-2 mb-4">{project.description || "No description"}</p>
+                                        <div className="flex justify-between items-center text-xs text-zinc-600">
+                                            <span>{new Date(project.created_at).toLocaleDateString()}</span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
+
                 </div>
-            </div>
 
-            {/* MODALS */}
-            {activeModal === 'orgs' && (
-                <ManageOrganizationsModal
-                    organizations={userOrgs}
-                    onClose={() => setActiveModal(null)}
-                    onAddOrganization={handleAddOrg}
-                    onUpdateOrganization={handleUpdateOrg}
-                    onDeleteOrganization={handleDeleteOrg}
-                />
-            )}
-            {activeModal === 'depts' && (
-                <ManageDepartmentsModal
-                    departments={departments}
-                    organizations={userOrgs}
-                    selectedOrgId={selectedOrgId}
-                    onClose={() => setActiveModal(null)}
-                    onRemoveItem={async (id) => { await supabase.from('departments').delete().eq('id', id); fetchData(); }}
-                    onReorderItem={async () => { }}
-                    onUpdateItemName={async (id, name) => { await supabase.from('departments').update({ name }).eq('id', id); fetchData(); }}
-                    tasks={[]} completedTasks={[]}
-                />
-            )}
+                {/* MODALS */}
+                {activeModal === 'orgs' && (
+                    <ManageOrganizationsModal
+                        organizations={userOrgs}
+                        onClose={() => setActiveModal(null)}
+                        onAddOrg={handleAddOrg}
+                        onUpdateOrg={handleUpdateOrg}
+                        onDeleteOrg={handleDeleteOrg}
+                    />
+                )}
 
-            {activeModal === 'users' && (
-                <ManageUsersModal
-                    users={users}
-                    onClose={() => setActiveModal(null)}
-                    onApproveUser={async (id) => { await supabase.from('users').update({ status: 'approved' }).eq('id', id); fetchData(); }}
-                    onEditUser={(user) => { setUserToEdit(user); setActiveModal('editUser'); }}
-                    onDeleteUser={async (id) => { await supabase.from('users').delete().eq('id', id); fetchData(); }}
-                    onAddMember={async (email, orgId, deptId) => {
-                        const { data: foundUsers } = await supabase.from('users').select('id').eq('email', email);
-                        if (foundUsers && foundUsers.length > 0) {
-                            const userId = foundUsers[0].id;
-                            await supabase.from('organization_members').insert({ organization_id: orgId, user_id: userId, role: 'member' });
-                            if (deptId) {
-                                await supabase.from('department_members').insert({ department_id: deptId, user_id: userId, role: 'member' });
+                {activeModal === 'depts' && (
+                    <ManageDepartmentsModal
+                        departments={departments}
+                        organizations={userOrgs}
+                        onClose={() => setActiveModal(null)}
+                        onAddDept={handleAddDept}
+                        onUpdateDept={handleUpdateDept}
+                        onDeleteDept={handleDeleteDept}
+                    />
+                )}
+
+                {activeModal === 'users' && (
+                    <ManageUsersModal
+                        users={users}
+                        onClose={() => setActiveModal(null)}
+                        onApproveUser={async (id) => { await supabase.from('users').update({ status: 'approved' } as any).eq('id', id); fetchData(); }}
+                        onEditUser={(u) => { setUserToEdit(u); setActiveModal('editUser'); }}
+                        onDeleteUser={async (id) => { await supabase.from('users').delete().eq('id', id); fetchData(); }}
+                        onAddMember={async (email, orgId, deptId) => {
+                            // 1. Check if user exists
+                            const { data: existingUser } = await supabase.from('users').select('*').eq('email', email).single();
+                            if (existingUser) {
+                                await handleAssignOrg(existingUser.id, orgId);
+                                if (deptId) await handleAssignDept(existingUser.id, deptId);
+                            } else {
+                                alert("User not found. They must sign up first.");
                             }
-                            fetchData();
-                        } else {
-                            alert("User not found. Invite functionality coming soon.");
-                        }
-                    }}
-                    currentUser={currentUser}
+                        }}
+                        tasks={[]}
+                        currentUser={currentUser}
+                        organizations={userOrgs}
+                        departments={departments}
+                        deptMembers={deptMembers}
+                        orgMembers={orgMembers}
+                        onAssignDept={handleAssignDept}
+                        onRemoveDept={handleRemoveDept}
+                    />
+                )}
+
+                {activeModal === 'projects' && (
+                    <ManageProjectsModal
+                        projects={projects}
+                        organizations={userOrgs}
+                        departments={departments}
+                        onClose={() => setActiveModal(null)}
+                        onAddProject={async (p) => { await supabase.from('projects').insert(p as any); fetchData(); }}
+                        onUpdateProject={async (p) => { await supabase.from('projects').update(p as any).eq('id', p.id); fetchData(); }}
+                        onDeleteProject={async (id) => { await supabase.from('projects').delete().eq('id', id); fetchData(); }}
+                    />
+                )}
+
+                {activeModal === 'editUser' && userToEdit && (
+                    <EditUserModal
+                        user={userToEdit}
+                        onClose={() => setActiveModal('users')}
+                        onSave={async (u) => { await supabase.from('users').update({ name: u.name, email: u.email, is_admin: u.is_admin } as any).eq('id', u.id); fetchData(); setActiveModal('users'); }}
+                        currentUser={currentUser}
+                        organizations={userOrgs}
+                        departments={departments}
+                        orgMembers={orgMembers}
+                        deptMembers={deptMembers}
+                        onAssignOrg={handleAssignOrg}
+                        onRemoveOrg={handleRemoveOrg}
+                        onAssignDept={handleAssignDept}
+                        onRemoveDept={handleRemoveDept}
+                    />
+                )}
+
+                {/* Mobile Navigation Drawer */}
+                <OrgDeptDrawer
+                    isOpen={isDrawerOpen}
+                    onClose={onCloseDrawer}
                     organizations={userOrgs}
                     departments={departments}
-                    deptMembers={deptMembers}
-                    onAssignDept={async (userId, deptId) => {
-                        await supabase.from('department_members').insert({ user_id: userId, department_id: deptId, role: 'member' });
-                        fetchData();
-                    }}
-                    onRemoveDept={async (userId, deptId) => {
-                        await supabase.from('department_members').delete().match({ user_id: userId, department_id: deptId });
-                        fetchData();
-                    }}
-                    tasks={[]}
+                    selectedOrgId={selectedOrgId}
+                    onSelectOrg={(id) => { setSelectedOrgId(id); }}
                 />
-            )}
-
-            {activeModal === 'projects' && (
-                <ManageProjectsModal
-                    items={filteredProjects}
-                    onClose={() => setActiveModal(null)}
-                    onAddItem={async (name) => {
-                        await supabase.from('projects').insert({
-                            name,
-                            organization_id: selectedOrgId,
-                            department_id: selectedDeptId,
-                            sorting: projects.length
-                        });
-                        fetchData();
-                    }}
-                    onRemoveItem={async (id) => { await supabase.from('projects').delete().eq('id', id); fetchData(); }}
-                    onReorderItem={async (id, direction) => { console.log("Reorder", id, direction); }}
-                    onUpdateItemName={async (id, name) => { await supabase.from('projects').update({ name }).eq('id', id); fetchData(); }}
-                    tasks={[]} completedTasks={[]}
-                />
-            )}
-
-            {activeModal === 'editUser' && userToEdit && (
-                <EditUserModal
-                    user={userToEdit}
-                    onClose={() => setActiveModal('users')}
-                    onSave={async (u) => { await supabase.from('users').update({ name: u.name, email: u.email, is_admin: u.is_admin }).eq('id', u.id); fetchData(); setActiveModal('users'); }}
-                    currentUser={currentUser}
-                />
-            )}
-
-            {/* Mobile Navigation Drawer */}
-            <OrgDeptDrawer
-                isOpen={isDrawerOpen}
-                onClose={onCloseDrawer}
-                organizations={userOrgs}
-                departments={departments}
-                selectedOrgId={selectedOrgId}
-                onSelectOrg={(id) => { setSelectedOrgId(id); }}
-            />
+            </div>
         </div>
     );
 };
