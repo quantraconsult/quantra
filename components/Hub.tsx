@@ -42,8 +42,6 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout,
             <>
               <a
                 href="https://planner.quantra.co.za"
-                target="_blank"
-                rel="noreferrer"
                 className="flex items-center gap-5 px-8 py-5 rounded-xl text-zinc-200 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all duration-200 group border border-zinc-700 hover:border-cyan-500/40 shadow-lg hover:shadow-cyan-900/20"
               >
                 <CalendarIcon className="w-7 h-7" />
@@ -51,8 +49,6 @@ const Hub: React.FC<HubProps> = ({ companyName, isAdmin, onAdminClick, onLogout,
               </a>
               <a
                 href="https://timesheets.quantra.co.za"
-                target="_blank"
-                rel="noreferrer"
                 className="flex items-center gap-5 px-8 py-5 rounded-xl text-zinc-200 hover:text-orange-400 hover:bg-orange-500/10 transition-all duration-200 group border border-zinc-700 hover:border-orange-500/40 shadow-lg hover:shadow-orange-900/20"
               >
                 <ClockIcon className="w-7 h-7" />
